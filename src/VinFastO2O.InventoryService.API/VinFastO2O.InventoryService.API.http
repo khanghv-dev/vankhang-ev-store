@@ -1,0 +1,6 @@
+@VinFastO2O.InventoryService.API_HostAddress = http://localhost:5186
+
+GET {{VinFastO2O.InventoryService.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

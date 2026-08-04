@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô hình Thực thể - Liên kết (ERD) - OrderService Database</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            color: #38bdf8;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        .header p {
+            color: #94a3b8;
+            margin-top: 0;
+            font-size: 14px;
+        }
+        .card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mô hình Thực thể - Liên kết (ERD) - OrderService Database</h1>
+        <p>Hệ thống VinFast O2O - PostgreSQL Database Schema</p>
+    </div>
+
+    <div class="card">
+        <pre class="mermaid">
+        erDiagram
+            users ||--o{ orders : "1 thực hiện N"
+            AdminUsers ||--o{ AdminRefreshTokens : "1 sở hữu N"
+            AdminUsers ||--o{ articles : "1 soạn thảo N"
+            AdminUsers ||--o{ AdminUserRoles : "1 được gán N"
+            Roles ||--o{ AdminUserRoles : "1 chứa N"
+            Roles ||--o{ RolePermissions : "1 sở hữu N"
+            Permissions ||--o{ RolePermissions : "1 thuộc về N"
+            orders ||--|{ order_items : "1 chứa (CASCADE) N"
+            orders ||--o| payments : "1 phát sinh (RESTRICT) 1"
+
+            users {
+                uuid UserId PK
+                varchar Email
+                varchar PasswordHash
+                boolean IsEmailConfirmed
+                varchar OtpCode
+                timestamp OtpExpiry
+                timestamp CreatedAt
+            }
+
+            orders {
+                uuid id PK
+                uuid customer_id FK
+                varchar customer_name
+                varchar customer_email
+                varchar customer_phone
+                varchar customer_id_card
+                uuid store_id
+                numeric total_amount
+                numeric deposit_amount
+                varchar deposit_type
+                varchar battery_option
+                varchar order_status
+                timestamp created_at
+                timestamp last_modified_at
+                timestamp paid_at
+                timestamp cancelled_at
+                text cancellation_reason
+            }
+
+            order_items {
+                uuid id PK
+                uuid order_id FK
+                varchar product_id
+                varchar product_name
+                char assigned_vin
+                numeric unit_price
+                integer quantity
+                numeric line_total
+                timestamp vin_assigned_at
+                timestamp created_at
+                timestamp last_modified_at
+            }
+
+            payments {
+                uuid id PK
+                uuid order_id FK
+                varchar transaction_no
+                numeric amount
+                varchar payment_method
+                varchar status
+                jsonb gateway_response
+                timestamp created_at
+                timestamp paid_at
+                timestamp failed_at
+                timestamp refunded_at
+                varchar refund_reason
+            }
+
+            AdminUsers {
+                uuid Id PK
+                varchar Username
+                varchar Email
+                varchar PasswordHash
+                boolean IsActive
+                timestamp CreatedAt
+            }
+
+            AdminRefreshTokens {
+                uuid Id PK
+                uuid AdminUserId FK
+                varchar Token
+                timestamp ExpiresAt
+                timestamp RevokedAt
+                timestamp CreatedAt
+            }
+
+            Roles {
+                uuid Id PK
+                varchar Code
+                varchar Name
+                varchar Description
+                timestamp CreatedAt
+            }
+
+            Permissions {
+                uuid Id PK
+                varchar Code
+                varchar Name
+                varchar Description
+                timestamp CreatedAt
+            }
+
+            AdminUserRoles {
+                uuid AdminUserId PK,FK
+                uuid RoleId PK,FK
+            }
+
+            RolePermissions {
+                uuid RoleId PK,FK
+                uuid PermissionId PK,FK
+            }
+
+            articles {
+                uuid id PK
+                varchar title
+                varchar slug
+                text content
+                varchar image_thumbnail
+                varchar status
+                integer view_count
+                uuid author_id FK
+                timestamp created_at
+                timestamp updated_at
+            }
+
+            faqs {
+                uuid id PK
+                varchar question
+                text answer
+                varchar category
+                integer display_order
+                timestamp created_at
+                timestamp updated_at
+            }
+
+            battery_health_reports {
+                varchar vin PK
+                double max_temp
+                double avg_temp
+                integer temp_anomalies_count
+                integer total_records
+                double avg_discharge_rate
+                double soh
+                boolean is_risky
+                varchar analysis_date
+                timestamp processed_at
+            }
+
+            outbox_events {
+                uuid id PK
+                varchar event_type
+                text payload
+                timestamp created_at
+                timestamp processed_at
+                text error
+            }
+        </pre>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            er: {
+                useMaxWidth: true
+            }
+        });
+    </script>
+</body>
+</html>

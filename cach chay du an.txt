@@ -1,0 +1,48 @@
+Dự án VinFast O2O bao gồm nhiều thành phần khác nhau (Backend Microservices, Infrastructure, Web AdminCustomer, và Mobile App).
+
+Dưới đây là chi tiết các thành phần và cách khởi chạy dự án
+
+1. Khởi chạy Hạ tầng & Backend Services (Docker Compose)
+Dự án đã cấu hình sẵn trong 
+
+docker-compose.yml
+ bao gồm
+
+Cơ sở dữ liệu & Services phụ trợ PostgreSQL (port 5432), MongoDB (port 27017), Redis (port 6379), Kafka (port 9092), MinIO S3 (port 90009001).
+Backend Microservices Inventory Service (port 5186), Order Service (port 5022).
+Lệnh khởi chạy toàn bộ bằng Docker
+
+powershell
+docker-compose up -d --build
+2. Khởi chạy lẻ các Backend Service (Nếu không dùng Docker cho API)
+Nếu bạn muốn tự chạy riêng từng dịch vụ .NET 8 bằng SDK
+
+Inventory Service API
+powershell
+cd dKLTNsrcVinFastO2O.InventoryService.API
+dotnet run
+Order Service API
+powershell
+cd dKLTNsrcVinFastO2O.OrderService.API
+dotnet run
+3. Khởi chạy Web Frontend (Next.js)
+Ứng dụng Web nằm trong thư mục 
+
+web
+
+
+powershell
+cd dKLTNweb
+npm run dev
+(Sau khi chạy, ứng dụng sẽ khả dụng tại httplocalhost3000)
+
+4. Khởi chạy App Mobile (Flutter)
+Ứng dụng Mobile nằm trong thư mục 
+
+mobile
+
+
+powershell
+cd dKLTNmobile
+flutter run
+Bạn muốn mình hỗ trợ chạy ngay lệnh khởi động phần nào (Ví dụ Chạy docker-compose cho DatabaseBackend hay chạy npm run dev cho Web Frontend)

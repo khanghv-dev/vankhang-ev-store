@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/* ============================================================
+   VinFast O2O — Design System (Tailwind v4 CSS-first config)
+   Brand Palette:
+     Primary:  VinFast Red   #E30613
+     Neutral:  Grays         #F8F9FA → #111827
+     Base:     White         #FFFFFF
+   ============================================================ */
+
+@theme inline {
+  /* ── Typography ── */
+  --font-sans:  var(--font-inter);
+  --font-mono:  var(--font-geist-mono);
+
+  /* ── Brand: VinFast Red ── */
+  --color-brand-50:   #fff0f0;
+  --color-brand-100:  #ffd6d8;
+  --color-brand-200:  #ffadb1;
+  --color-brand-300:  #ff7a80;
+  --color-brand-400:  #ff3d46;
+  --color-brand-500:  #e30613;   /* ← VinFast Red (primary) */
+  --color-brand-600:  #c0000f;
+  --color-brand-700:  #a0000c;
+  --color-brand-800:  #7f0009;
+  --color-brand-900:  #5c0007;
+  --color-brand-950:  #380004;
+
+  /* ── Neutral Gray ── */
+  --color-neutral-50:  #f8f9fa;
+  --color-neutral-100: #f1f3f5;
+  --color-neutral-200: #e9ecef;
+  --color-neutral-300: #dee2e6;
+  --color-neutral-400: #ced4da;
+  --color-neutral-500: #adb5bd;
+  --color-neutral-600: #868e96;
+  --color-neutral-700: #495057;
+  --color-neutral-800: #343a40;
+  --color-neutral-900: #212529;
+  --color-neutral-950: #111827;
+
+  /* ── Semantic aliases ── */
+  --color-primary:          var(--color-brand-500);
+  --color-primary-hover:    var(--color-brand-600);
+  --color-primary-active:   var(--color-brand-700);
+  --color-primary-light:    var(--color-brand-50);
+  --color-primary-fg:       #ffffff;
+
+  --color-surface:          #ffffff;
+  --color-surface-muted:    var(--color-neutral-50);
+  --color-surface-subtle:   var(--color-neutral-100);
+
+  --color-border:           var(--color-neutral-200);
+  --color-border-strong:    var(--color-neutral-300);
+
+  --color-text-base:        var(--color-neutral-900);
+  --color-text-muted:       var(--color-neutral-600);
+  --color-text-subtle:      var(--color-neutral-500);
+  --color-text-inverted:    #ffffff;
+
+  --color-success:          #16a34a;
+  --color-warning:          #d97706;
+  --color-error:            var(--color-brand-500);
+
+  /* ── Spacing ── */
+  --spacing-section:    5rem;
+  --spacing-container: 80rem;      /* max-w-7xl equivalent */
+
+  /* ── Border radius ── */
+  --radius-sm:   0.375rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.5rem;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-card:   0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+  --shadow-raised: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  --shadow-modal:  0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-brand:  0 4px 14px 0 rgb(227 6 19 / 0.35);
+}
+
+/* ── Base styles ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-surface);
+  color:            var(--color-text-base);
+  font-family:      var(--font-sans), system-ui, -apple-system, sans-serif;
+  min-height:       100vh;
+}
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline:        2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius:  var(--radius-sm);
+}
+
+/* ── Selection color ── */
+::selection {
+  background-color: var(--color-brand-100);
+  color:            var(--color-brand-900);
+}
+
+/* ── Scrollbar (Webkit) ── */
+::-webkit-scrollbar {
+  width:  6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-neutral-100);
+}
+::-webkit-scrollbar-thumb {
+  background:    var(--color-neutral-300);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neutral-400);
+}

@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  # ─── Relational Database (PostgreSQL) ───
+  postgres:
+    image: postgres:16-alpine
+    container_name: vinfast-postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: hvk2k5
+      POSTGRES_PASSWORD: odoopwd
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker-init/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hvk2k5"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Document Database (MongoDB) ───
+  mongodb:
+    image: mongo:7.0
+    container_name: vinfast-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand({ping: 1})' --quiet"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Cache & State Store (Redis) ───
+  redis:
+    image: redis:7.2-alpine
+    container_name: vinfast-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Messaging Queue (Apache Kafka - KRaft Mode) ───
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: vinfast-kafka
+    restart: always
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Object Storage (MinIO) ───
+  minio:
+    image: minio/minio:RELEASE.2024-01-28T22-35-53Z
+    container_name: vinfast-minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+  createbuckets:
+    image: minio/mc
+    container_name: vinfast-minio-mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO...';
+      sleep 5;
+      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadminpassword;
+      /usr/bin/mc mb local/vinfast-product-images;
+      /usr/bin/mc anonymous set download local/vinfast-product-images;
+      exit 0;
+      "
+
+  # ─── Inventory Microservice ───
+  inventory-service:
+    build:
+      context: ./src
+      dockerfile: VinFastO2O.InventoryService.API/Dockerfile
+    container_name: vinfast-inventory-service
+    restart: always
+    ports:
+      - "5186:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=hvk2k5;Password=odoopwd
+      - ConnectionStrings__MongoConnection=mongodb://mongodb:27017
+      - ConnectionStrings__RedisConnection=redis:6379
+      - Kafka__Host=kafka:29092
+      - S3Settings__ServiceUrl=http://minio:9000
+      - S3Settings__AccessKey=minioadmin
+      - S3Settings__SecretKey=minioadminpassword
+      - S3Settings__BucketName=vinfast-product-images
+      - S3Settings__PublicUrlPrefix=http://localhost:9000/vinfast-product-images
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # ─── Order Microservice ───
+  order-service:
+    build:
+      context: ./src
+      dockerfile: VinFastO2O.OrderService.API/Dockerfile
+    container_name: vinfast-order-service
+    restart: always
+    ports:
+      - "5022:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_OrderDb_Dev;Username=hvk2k5;Password=odoopwd
+      - ConnectionStrings__InventoryConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=hvk2k5;Password=odoopwd
+      - ConnectionStrings__RedisConnection=redis:6379
+      - Kafka__Host=kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  redis-data:
+  minio-data:

@@ -1,0 +1,92 @@
+name: CI/CD Pipeline - VinFastO2O Microservices
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ─── Job 1: Run Automated Tests ───
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore NuGet Packages
+        run: dotnet restore VinFastO2O.InventoryService.sln
+
+      - name: Build Solution
+        run: dotnet build VinFastO2O.InventoryService.sln --no-restore -c Release
+
+      - name: Execute Unit Tests
+        run: dotnet test VinFastO2O.InventoryService.sln --no-build --verbosity normal
+
+  # ─── Job 2: Build, Push Docker Images & Deploy to K8s ───
+  build-and-deploy:
+    name: Build, Push & Deploy
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Build and Push Inventory Service Image
+      - name: Build & Push Inventory Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src
+          file: ./src/VinFastO2O.InventoryService.API/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/vinfast-inventory-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/vinfast-inventory-service:${{ github.sha }}
+
+      # Build and Push Order Service Image
+      - name: Build & Push Order Service Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src
+          file: ./src/VinFastO2O.OrderService.API/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/vinfast-order-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/vinfast-order-service:${{ github.sha }}
+
+      # Setup Kubernetes CLI context using Kubeconfig
+      - name: Setup Kubectl context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      # Zero-Downtime Rolling Update on Kubernetes cluster
+      - name: Deploy to Kubernetes Cluster (Rolling Update)
+        run: |
+          # 1. Update deployment container image targets to the new commit SHA
+          kubectl set image deployment/order-service order-service=${{ secrets.DOCKERHUB_USERNAME }}/vinfast-order-service:${{ github.sha }} -n vinfast-o2o
+          kubectl set image deployment/inventory-service inventory-service=${{ secrets.DOCKERHUB_USERNAME }}/vinfast-inventory-service:${{ github.sha }} -n vinfast-o2o
+          
+          # 2. Block and verify that the rolling updates complete successfully without errors (Zero-downtime check)
+          echo "Verifying Order Service rollout..."
+          kubectl rollout status deployment/order-service -n vinfast-o2o
+          
+          echo "Verifying Inventory Service rollout..."
+          kubectl rollout status deployment/inventory-service -n vinfast-o2o
