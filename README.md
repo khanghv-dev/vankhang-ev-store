@@ -13,30 +13,30 @@ Dự án được thiết kế theo mô hình Microservices áp dụng chuẩn C
 ## Công nghệ Sử dụng (Tech Stack)
 
 ### 1. Backend Services (.NET 8 Web API)
-* Kiến trúc: Clean Architecture (Domain, Application, Infrastructure, API).
-* Quản lý Đơn hàng (OrderService): Đặt lịch dịch vụ, đặt cọc xe/pin, thanh toán (VNPay), phân quyền RBAC, CMS tin tức/FAQ, Outbox Pattern.
-* Quản lý Kho (InventoryService): Tồn kho phụ tùng (Pin VF8, lốp, động cơ...), POS Showroom, theo dõi log trạm pin.
-* Thư viện chính: Entity Framework Core 8, MediatR, FluentValidation, MassTransit/Kafka, StackExchange.Redis.
+- Kiến trúc: Clean Architecture (Domain, Application, Infrastructure, API).
+- Quản lý Đơn hàng (OrderService): Đặt lịch dịch vụ, đặt cọc xe/pin, thanh toán (VNPay), phân quyền RBAC, CMS tin tức/FAQ, Outbox Pattern.
+- Quản lý Kho (InventoryService): Tồn kho phụ tùng (Pin VF8, lốp, động cơ...), POS Showroom, theo dõi log trạm pin.
+- Thư viện chính: Entity Framework Core 8, MediatR, FluentValidation, MassTransit/Kafka, StackExchange.Redis.
 
 ### 2. Frontend Web Application (Next.js & React)
-* Framework: Next.js 16 (App Router), React 19, TypeScript.
-* Styling & UI: Tailwind CSS v4, Lucide Icons, Chart.js.
-* Tính năng:
-  * Customer Portal: Xem sản phẩm xe/pin, đặt cọc trực tuyến, tra cứu đơn hàng, tin tức và hỗ trợ.
-  * Admin Dashboard: Quản lý đơn hàng, quản lý kho/sản phẩm, quản lý bài viết/FAQ, nhật ký Audit Logs, báo cáo phân tích pin.
+- Framework: Next.js 16 (App Router), React 19, TypeScript.
+- Styling & UI: Tailwind CSS v4, Lucide Icons, Chart.js.
+- Tính năng:
+  - Customer Portal: Xem sản phẩm xe/pin, đặt cọc trực tuyến, tra cứu đơn hàng, tin tức và hỗ trợ.
+  - Admin Dashboard: Quản lý đơn hàng, quản lý kho/sản phẩm, quản lý bài viết/FAQ, nhật ký Audit Logs, báo cáo phân tích pin.
 
 ### 3. Mobile Application (Flutter)
-* Framework: Flutter (Dart).
-* Tính năng: Dành cho chủ xe điện đặt lịch bảo dưỡng, tìm kiếm trạm pin khả dụng gần nhất và theo dõi tiến trình dịch vụ thời gian thực.
+- Framework: Flutter (Dart).
+- Tính năng: Dành cho chủ xe điện đặt lịch bảo dưỡng, tìm kiếm trạm pin khả dụng gần nhất và theo dõi tiến trình dịch vụ thời gian thực.
 
 ### 4. Hạ tầng và Cơ sở dữ liệu (Infrastructure)
-* Relational Database: PostgreSQL 16 (Port 5433).
-* Document Database: MongoDB 7.0 (Port 27017).
-* Cache: Redis 7.2 (Port 6379).
-* Message Broker: Apache Kafka 7.6 KRaft Mode (Port 9092).
-* Object Storage: MinIO S3 Compatible (Port 9000 và Console 9001).
-* Big Data & Analytics: Apache Spark.
-* Containerization: Docker, Docker Compose, Kubernetes (K8s).
+- Relational Database: PostgreSQL 16 (Port 5433).
+- Document Database: MongoDB 7.0 (Port 27017).
+- Cache: Redis 7.2 (Port 6379).
+- Message Broker: Apache Kafka 7.6 KRaft Mode (Port 9092).
+- Object Storage: MinIO S3 Compatible (Port 9000 và Console 9001).
+- Big Data & Analytics: Apache Spark.
+- Containerization: Docker, Docker Compose, Kubernetes (K8s).
 
 ---
 
@@ -70,10 +70,10 @@ VinFastO2O/
 ## Hướng dẫn Khởi chạy Dự án (Getting Started)
 
 ### Yêu cầu tiên quyết (Prerequisites)
-* Docker Desktop
-* .NET 8.0 SDK trở lên
-* Node.js 20+ và npm
-* Flutter SDK (nếu muốn chạy ứng dụng Mobile)
+- Docker Desktop
+- .NET 8.0 SDK trở lên
+- Node.js 20+ và npm
+- Flutter SDK (nếu muốn chạy ứng dụng Mobile)
 
 ---
 
@@ -113,8 +113,8 @@ docker-compose up -d --build
    npm run dev
    ```
 4. Truy cập Web tại: http://localhost:3000
-   * Trang khách hàng: http://localhost:3000
-   * Trang quản trị (Admin): http://localhost:3000/admin/login
+   - Trang khách hàng: http://localhost:3000
+   - Trang quản trị (Admin): http://localhost:3000/admin/login
 
 ---
 
