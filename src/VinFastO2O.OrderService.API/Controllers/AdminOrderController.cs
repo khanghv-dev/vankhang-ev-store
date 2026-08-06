@@ -267,14 +267,31 @@ public sealed class AdminOrderController : ControllerBase
 
                 if (vehicleId == Guid.Empty)
                 {
-                    await _vehicleLockService.ReleaseVehicleLockAsync(vin);
-                    return BadRequest(new { message = $"Mã số khung VIN '{vin}' không tồn tại trong hệ thống kho xe." });
-                }
+                    // Auto-register new physical vehicle into inventory table with Status = 4 (Reserved)
+                    vehicleId = Guid.NewGuid();
+                    var productName = order.Items.FirstOrDefault()?.ProductName ?? "VinFast Electric Vehicle";
+                    vehicleStoreId = order.StoreId;
+                    vehicleStatus = 4;
 
-                if (vehicleStatus != 3) // 3: Available
+                    const string insertVehicleSql = @"
+                        INSERT INTO vehicles (""Id"", ""Vin"", ""EngineNumber"", ""ModelName"", ""Color"", ""Brand"", ""Price"", ""BatteryType"", ""Status"", ""StoreId"", ""CreatedAt"", ""LastModifiedAt"")
+                        VALUES (@Id, @Vin, @EngineNumber, @ModelName, 'Trắng', 'VinFast', @Price, 'LFP', 4, @StoreId, NOW(), NOW());";
+
+                    using (var insertCmd = new Npgsql.NpgsqlCommand(insertVehicleSql, connection))
+                    {
+                        insertCmd.Parameters.AddWithValue("Id", vehicleId);
+                        insertCmd.Parameters.AddWithValue("Vin", vin);
+                        insertCmd.Parameters.AddWithValue("EngineNumber", $"ENG-{Random.Shared.Next(100000, 999999)}");
+                        insertCmd.Parameters.AddWithValue("ModelName", productName);
+                        insertCmd.Parameters.AddWithValue("Price", order.TotalAmount > 0 ? order.TotalAmount : 19400000m);
+                        insertCmd.Parameters.AddWithValue("StoreId", order.StoreId);
+                        await insertCmd.ExecuteNonQueryAsync(ct);
+                    }
+                }
+                else if (vehicleStatus != 3 && vehicleStatus != 4) // Allow if Available (3) or already Reserved (4)
                 {
                     await _vehicleLockService.ReleaseVehicleLockAsync(vin);
-                    return BadRequest(new { message = $"Xe mang số VIN '{vin}' đã được gán hoặc cọc bởi khách hàng khác. Trạng thái hiện tại: {vehicleStatus}" });
+                    return BadRequest(new { message = $"Xe mang số VIN '{vin}' đã ở trạng thái không khả dụng ({vehicleStatus})." });
                 }
 
                 // 2. Release previous VIN if any
@@ -365,6 +382,15 @@ public sealed class AdminOrderController : ControllerBase
         {
             await _vehicleLockService.ReleaseVehicleLockAsync(vin);
             return BadRequest(new { message = ex.Message });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+        {
+            await _vehicleLockService.ReleaseVehicleLockAsync(vin);
+            if (ex.InnerException?.Message.Contains("uq_order_items_assigned_vin") == true || ex.InnerException?.Message.Contains("duplicate key") == true)
+            {
+                return BadRequest(new { message = $"Mã VIN '{vin}' đã được gán cho một đơn hàng khác trước đó. Mỗi xe chỉ thuộc duy nhất 1 đơn hàng, vui lòng nhập mã VIN mới chưa gán." });
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Lỗi cơ sở dữ liệu khi gán mã VIN: " + (ex.InnerException?.Message ?? ex.Message) });
         }
         catch (Exception ex)
         {

@@ -147,18 +147,18 @@ ordersApi.MapGet("/my-orders", async (
     VinFastO2O.OrderService.Infrastructure.Persistence.OrderDbContext db) =>
 {
     var queryable = db.Orders.AsNoTracking().Include(o => o.Items).AsQueryable();
-    if (!string.IsNullOrWhiteSpace(phone))
-    {
-        queryable = queryable.Where(o => o.CustomerPhone == phone.Trim());
-    }
-    else if (!string.IsNullOrWhiteSpace(email))
+    if (!string.IsNullOrWhiteSpace(email))
     {
         queryable = queryable.Where(o => o.CustomerEmail.ToLower() == email.Trim().ToLower());
     }
+    else if (!string.IsNullOrWhiteSpace(phone))
+    {
+        queryable = queryable.Where(o => o.CustomerPhone == phone.Trim());
+    }
     else
     {
-        // Mặc định lấy danh sách đơn cọc mới nhất để hiển thị
-        queryable = queryable.Take(20);
+        // Khi không có email/phone truyền vào, trả về danh sách rỗng bảo mật
+        return Results.Ok(new List<VinFastO2O.OrderService.Domain.Entities.Order>());
     }
 
     var list = await queryable.OrderByDescending(o => o.CreatedAt).ToListAsync();
@@ -341,29 +341,31 @@ app.MapGet("/api/payments/mock-gate", async (HttpContext httpContext, IVnPayServ
     var tmnCode = parameters["vnp_TmnCode"];
 
     // Pre-calculate Webhook Callbacks (IPN) with computed valid secure hashes
+    var uniqueTxnNo = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
     var successParams = new Dictionary<string, string>
     {
         { "vnp_TxnRef", orderId.ToString() },
         { "vnp_Amount", amountStr },
         { "vnp_ResponseCode", "00" },
         { "vnp_TmnCode", tmnCode },
-        { "vnp_TransactionNo", "12345678" },
+        { "vnp_TransactionNo", uniqueTxnNo },
         { "vnp_OrderInfo", $"Thanh toan dat coc cho don hang {orderId}" }
     };
     var successHash = vnPayService.CalculateHash(successParams, hashSecret);
-    var successWebhookUrl = $"/api/PaymentWebhook/vnpay-ipn?vnp_TxnRef={orderId}&vnp_Amount={amountStr}&vnp_ResponseCode=00&vnp_TmnCode={tmnCode}&vnp_TransactionNo=12345678&vnp_OrderInfo={Uri.EscapeDataString($"Thanh toan dat coc cho don hang {orderId}")}&vnp_SecureHash={successHash}";
+    var successWebhookUrl = $"/api/PaymentWebhook/vnpay-ipn?vnp_TxnRef={orderId}&vnp_Amount={amountStr}&vnp_ResponseCode=00&vnp_TmnCode={tmnCode}&vnp_TransactionNo={uniqueTxnNo}&vnp_OrderInfo={Uri.EscapeDataString($"Thanh toan dat coc cho don hang {orderId}")}&vnp_SecureHash={successHash}";
 
+    var cancelTxnNo = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 1).ToString();
     var cancelParams = new Dictionary<string, string>
     {
         { "vnp_TxnRef", orderId.ToString() },
         { "vnp_Amount", amountStr },
         { "vnp_ResponseCode", "24" },
         { "vnp_TmnCode", tmnCode },
-        { "vnp_TransactionNo", "00000000" },
+        { "vnp_TransactionNo", cancelTxnNo },
         { "vnp_OrderInfo", $"Thanh toan dat coc cho don hang {orderId}" }
     };
     var cancelHash = vnPayService.CalculateHash(cancelParams, hashSecret);
-    var cancelWebhookUrl = $"/api/PaymentWebhook/vnpay-ipn?vnp_TxnRef={orderId}&vnp_Amount={amountStr}&vnp_ResponseCode=24&vnp_TmnCode={tmnCode}&vnp_TransactionNo=00000000&vnp_OrderInfo={Uri.EscapeDataString($"Thanh toan dat coc cho don hang {orderId}")}&vnp_SecureHash={cancelHash}";
+    var cancelWebhookUrl = $"/api/PaymentWebhook/vnpay-ipn?vnp_TxnRef={orderId}&vnp_Amount={amountStr}&vnp_ResponseCode=24&vnp_TmnCode={tmnCode}&vnp_TransactionNo={cancelTxnNo}&vnp_OrderInfo={Uri.EscapeDataString($"Thanh toan dat coc cho don hang {orderId}")}&vnp_SecureHash={cancelHash}";
 
     var baseServerUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
     var returnUrl = configuration["VnPay:ReturnUrl"] ?? $"{baseServerUrl}/api/payments/vnpay-return";
@@ -788,7 +790,10 @@ static string GetMockGateHtml(string orderId, string customerName, string custom
 
                     spinner.style.display = 'none';
 
-                    if (data.RspCode === '00' || data.RspCode === '02') {
+                    const code = data.RspCode || data.rspCode;
+                    const msg = data.Message || data.message || "Xác nhận thất bại";
+
+                    if (code === '00' || code === '02') {
                         if (isSuccess) {
                             document.getElementById('payment-card').style.display = 'none';
                             document.getElementById('success-card').style.display = 'block';
@@ -800,7 +805,7 @@ static string GetMockGateHtml(string orderId, string customerName, string custom
                             window.location.href = returnUrl + "?vnp_TxnRef={{orderId}}&vnp_ResponseCode=24";
                         }
                     } else {
-                        alert('Lỗi từ webhook IPN: ' + data.Message);
+                        alert('Lỗi từ webhook IPN: ' + msg);
                     }
                 } catch (err) {
                     spinner.style.display = 'none';

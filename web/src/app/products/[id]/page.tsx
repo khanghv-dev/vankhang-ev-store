@@ -462,26 +462,47 @@ export default function ProductDetailPage({
     if (email) setBuyerEmail(email);
   }, []);
 
+  // Helper Guid validator
+  const isGuid = (val: string) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
+
   // Fetch showrooms when modal opens
   const openBuyNow = async () => {
     setOrderError(null);
     setIsBuyNowOpen(true);
+
+    const defaultShowrooms = [
+      { id: "7ade971e-16e8-4e4e-bc75-54c7e4843062", name: "VinFast Showroom Mỹ Đình (Hà Nội)" },
+      { id: "ed331c16-7732-4cf3-8ac2-3e30d7de9011", name: "VinFast Showroom Landmark 81 (TP.HCM)" },
+      { id: "454ad1fd-9118-4b52-9ad2-35fc4796ab18", name: "VinFast Showroom Thảo Điền (Thủ Đức)" },
+      { id: "334fb037-b6a1-49a5-9e4f-0f29e265f6e2", name: "VinFast Showroom Bình Dương" },
+    ];
+
     try {
       const res = await fetch(`${ORDER_API}/api/admin/showrooms?pageSize=20`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}` },
       });
       if (res.ok) {
         const data = await res.json();
-        const list = (data.items || data.data || data || []).map((s: any) => ({
-          id: s.id || s.storeId,
-          name: s.name || s.storeName,
-        }));
-        setShowrooms(list);
-        if (list.length > 0 && !selectedStore) setSelectedStore(list[0].id);
+        const rawList = data.items || data.data || (Array.isArray(data) ? data : []);
+        const list = rawList
+          .map((s: any) => ({
+            id: s.id || s.storeId || s.showroom_id,
+            name: s.name || s.storeName || s.showroomName,
+          }))
+          .filter((s: any) => s.id && isGuid(s.id));
+
+        if (list.length > 0) {
+          setShowrooms(list);
+          if (!selectedStore || !isGuid(selectedStore)) setSelectedStore(list[0].id);
+          return;
+        }
       }
     } catch {
-      // Silently ignore – showroom list is optional
+      // Ignore
     }
+
+    setShowrooms(defaultShowrooms);
+    if (!selectedStore || !isGuid(selectedStore)) setSelectedStore(defaultShowrooms[0].id);
   };
 
   // Helper values - Dynamic multi-angle images per color (ưu tiên ảnh đúng màu)
@@ -517,20 +538,24 @@ export default function ProductDetailPage({
     setIsOrdering(true);
     setOrderError(null);
     try {
+      const validStoreId = (selectedStore && isGuid(selectedStore)) 
+        ? selectedStore 
+        : "7ade971e-16e8-4e4e-bc75-54c7e4843062";
+
       const payload = {
-        customerId: "00000000-0000-0000-0000-000000000001",
+        customerId: "c1111111-1111-1111-1111-111111111111",
         customerName: buyerName.trim(),
         customerEmail: buyerEmail.trim(),
         customerPhone: buyerPhone.trim(),
-        customerIdCard: buyerIdCard.trim() || "000000000000",
-        storeId: selectedStore || "00000000-0000-0000-0000-000000000001",
+        customerIdCard: buyerIdCard.trim() || "012345678912",
+        storeId: validStoreId,
         totalAmount: product.price * quantity,
         depositAmount: Math.round(product.price * quantity * 0.1),
         depositType: 0, // LinhHoat
         batteryOption: 1, // ThuePin
         items: [
           {
-            productId: "00000000-0000-0000-0000-000000000002",
+            productId: "e0000000-0000-0000-0000-000000000001",
             productName: `${product.name} (${selectedColor})`,
             unitPrice: product.price,
             quantity: quantity,
@@ -550,10 +575,25 @@ export default function ProductDetailPage({
       }
 
       const data = await res.json();
-      setCreatedOrderId(data.id || data.orderId || null);
-      // Lưu phone để trang lịch sử lọc đơn này
+      const orderId = data.id || data.orderId;
+      setCreatedOrderId(orderId || null);
       localStorage.setItem("lastOrderPhone", buyerPhone.trim());
       localStorage.setItem("userPhone", buyerPhone.trim());
+
+      // Gọi API VNPAY Payment để chuyển hướng thẳng sang cổng thanh toán VNPAY Sandbox
+      if (orderId) {
+        const payRes = await fetch(`${ORDER_API}/api/orders/${orderId}/payment`, {
+          method: "POST",
+        });
+        if (payRes.ok) {
+          const payData = await payRes.json();
+          if (payData.paymentUrl) {
+            window.location.href = payData.paymentUrl;
+            return;
+          }
+        }
+      }
+
       setIsBuyNowOpen(false);
       setOrderSuccess(true);
       setTimeout(() => setOrderSuccess(false), 8000);
@@ -692,8 +732,8 @@ export default function ProductDetailPage({
                         onChange={e => setSelectedStore(e.target.value)}
                         className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
                       >
-                        {showrooms.map(s => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
+                        {showrooms.map((s, index) => (
+                          <option key={s.id ? `${s.id}-${index}` : index} value={s.id}>{s.name}</option>
                         ))}
                       </select>
                     </div>
@@ -720,7 +760,7 @@ export default function ProductDetailPage({
                       Đang xử lý...
                     </>
                   ) : (
-                    <>✅ Xác nhận đặt hàng</>  
+                    <>💳 Thanh toán cọc qua VNPAY</>  
                   )}
                 </button>
                 <p className="text-center text-xs text-gray-400">Đặt cọc 10% · Thanh toán phần còn lại khi nhận xe</p>

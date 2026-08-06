@@ -47,7 +47,7 @@ const mockDeposits: DepositOrder[] = [
 
 export default function DepositHistoryPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userEmail } = useAuth();
   const [loading, setLoading] = useState(true);
   const [deposits, setDeposits] = useState<DepositOrder[]>([]);
   const [activeQrOrder, setActiveQrOrder] = useState<DepositOrder | null>(null);
@@ -58,15 +58,17 @@ export default function DepositHistoryPage() {
         const token = localStorage.getItem("accessToken");
         const userPhone = localStorage.getItem("userPhone") || localStorage.getItem("lastOrderPhone") || "";
 
-        // Nếu không đăng nhập và không có phone → redirect login
-        if (!token && !userPhone) {
+        // Nếu không đăng nhập và không có phone/email → redirect login
+        if (!token && !userPhone && !userEmail) {
           router.push("/login");
           return;
         }
 
-        // Xây URL: nếu có phone thì lọc theo phone
+        // Xây URL: ưu tiên lọc theo email người dùng đăng nhập
         let url = "http://localhost:5022/api/orders/my-orders";
-        if (userPhone) {
+        if (userEmail) {
+          url += `?email=${encodeURIComponent(userEmail)}`;
+        } else if (userPhone) {
           url += `?phone=${encodeURIComponent(userPhone)}`;
         }
 
@@ -80,18 +82,21 @@ export default function DepositHistoryPage() {
               if (s === "Preparing") return "PENDING_REFUND";
               return "PENDING"; // Pending, Created, etc.
             };
-            const mapped: DepositOrder[] = data.map((item: any) => ({
-              depositId: item.id?.substring(0, 8).toUpperCase() || "ORD-2026",
-              vehicleName: item.items?.[0]?.productName || "VinFast VF 8",
-              depositDate: item.paidAt
-                ? new Date(item.paidAt).toLocaleDateString("vi-VN")
-                : new Date(item.createdAt).toLocaleDateString("vi-VN"),
-              amount: `${(item.depositAmount || 0).toLocaleString("vi-VN")} đ`,
-              type: (item.depositType === 0 ? "Linh hoạt" : "Cam kết") as "Linh hoạt" | "Cam kết",
-              status: mapStatus(item.status),
-              vinNumber: item.items?.[0]?.assignedVin || "",
-              showroomName: "VinFast Showroom Smart City",
-            }));
+            const mapped: DepositOrder[] = data.map((item: any) => {
+              const rawId = typeof item.id === "string" ? item.id : item.id?.value ? String(item.id.value) : String(item.id || "");
+              return {
+                depositId: rawId ? rawId.substring(0, 8).toUpperCase() : "ORD-2026",
+                vehicleName: item.items?.[0]?.productName || "VinFast VF 8",
+                depositDate: item.paidAt
+                  ? new Date(item.paidAt).toLocaleDateString("vi-VN")
+                  : new Date(item.createdAt).toLocaleDateString("vi-VN"),
+                amount: `${(item.depositAmount || 0).toLocaleString("vi-VN")} đ`,
+                type: (item.depositType === 0 ? "Linh hoạt" : "Cam kết") as "Linh hoạt" | "Cam kết",
+                status: mapStatus(item.status),
+                vinNumber: item.items?.[0]?.assignedVin || "",
+                showroomName: "VinFast Showroom Smart City",
+              };
+            });
             setDeposits(mapped);
           } else if (Array.isArray(data) && data.length === 0) {
             // Không có đơn nào theo phone → fallback lấy 20 đơn mới nhất

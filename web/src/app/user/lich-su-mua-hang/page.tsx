@@ -51,7 +51,7 @@ const mockVehicles: OwnedVehicle[] = [
 
 export default function PurchaseHistoryPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userEmail } = useAuth();
   const [loading, setLoading] = useState(true);
   const [vehicles, setVehicles] = useState<OwnedVehicle[]>([]);
 
@@ -64,25 +64,32 @@ export default function PurchaseHistoryPage() {
           return;
         }
 
-        const res = await fetch("http://localhost:5022/api/orders/my-orders");
+        const url = userEmail
+          ? `http://localhost:5022/api/orders/my-orders?email=${encodeURIComponent(userEmail)}`
+          : "http://localhost:5022/api/orders/my-orders";
+
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
             const delivered = data
               .filter((item: any) => item.status === "Delivered" || item.status === "Ready")
-              .map((item: any) => ({
-                vehicleId: item.id?.substring(0, 8).toUpperCase() || "VEH-2026",
-                name: item.items?.[0]?.productName || "Xe VinFast",
-                category: "Xe điện VinFast chính hãng",
-                image: "/products/vf8.png",
-                price: `${(item.totalAmount || 0).toLocaleString("vi-VN")} đ`,
-                vinNumber: item.items?.[0]?.assignedVin || "Đang cấp mã VIN",
-                engineNumber: `ENG-${item.id?.substring(0, 6).toUpperCase()}`,
-                deliveryDate: item.paidAt ? new Date(item.paidAt).toLocaleDateString("vi-VN") : "Đã nhận xe",
-                showroomName: "VinFast Showroom Smart City",
-                batteryPlan: item.batteryOption === 1 ? "Thuê pin LFP" : "Mua đứt pin",
-                invoiceUrl: "#"
-              }));
+              .map((item: any) => {
+                const rawId = typeof item.id === "string" ? item.id : item.id?.value ? String(item.id.value) : String(item.id || "");
+                return {
+                  vehicleId: rawId ? rawId.substring(0, 8).toUpperCase() : "VEH-2026",
+                  name: item.items?.[0]?.productName || "Xe VinFast",
+                  category: "Xe điện VinFast chính hãng",
+                  image: "/products/vf8.png",
+                  price: `${(item.totalAmount || 0).toLocaleString("vi-VN")} đ`,
+                  vinNumber: item.items?.[0]?.assignedVin || "Đang cấp mã VIN",
+                  engineNumber: rawId ? `ENG-${rawId.substring(0, 6).toUpperCase()}` : "ENG-202600",
+                  deliveryDate: item.paidAt ? new Date(item.paidAt).toLocaleDateString("vi-VN") : "Đã nhận xe",
+                  showroomName: "VinFast Showroom Smart City",
+                  batteryPlan: item.batteryOption === 1 ? "Thuê pin LFP" : "Mua đứt pin",
+                  invoiceUrl: "#"
+                };
+              });
             setVehicles(delivered);
           }
         }

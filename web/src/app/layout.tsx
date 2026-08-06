@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ClientLayout from "@/components/ClientLayout";
+import GoogleAuthProviderWrapper from "@/components/GoogleAuthProviderWrapper";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -52,9 +53,11 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col bg-[#F5F7FA]">
-        <AuthProvider>
-          <ClientLayout>{children}</ClientLayout>
-        </AuthProvider>
+        <GoogleAuthProviderWrapper>
+          <AuthProvider>
+            <ClientLayout>{children}</ClientLayout>
+          </AuthProvider>
+        </GoogleAuthProviderWrapper>
       </body>
     </html>
   );

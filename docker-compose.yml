@@ -9,13 +9,13 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_USER: hvk2k5
-      POSTGRES_PASSWORD: odoopwd
+      POSTGRES_USER: ${POSTGRES_USER:-hvk2k5}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-odoopwd}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker-init/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hvk2k5"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hvk2k5}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -86,8 +86,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadminpassword
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadminpassword}
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
@@ -101,7 +101,7 @@ services:
       /bin/sh -c "
       echo 'Waiting for MinIO...';
       sleep 5;
-      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadminpassword;
+      /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadminpassword};
       /usr/bin/mc mb local/vinfast-product-images;
       /usr/bin/mc anonymous set download local/vinfast-product-images;
       exit 0;
@@ -118,13 +118,13 @@ services:
       - "5186:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=hvk2k5;Password=odoopwd
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
       - ConnectionStrings__MongoConnection=mongodb://mongodb:27017
       - ConnectionStrings__RedisConnection=redis:6379
       - Kafka__Host=kafka:29092
       - S3Settings__ServiceUrl=http://minio:9000
-      - S3Settings__AccessKey=minioadmin
-      - S3Settings__SecretKey=minioadminpassword
+      - S3Settings__AccessKey=${MINIO_ROOT_USER:-minioadmin}
+      - S3Settings__SecretKey=${MINIO_ROOT_PASSWORD:-minioadminpassword}
       - S3Settings__BucketName=vinfast-product-images
       - S3Settings__PublicUrlPrefix=http://localhost:9000/vinfast-product-images
     depends_on:
@@ -148,10 +148,11 @@ services:
       - "5022:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_OrderDb_Dev;Username=hvk2k5;Password=odoopwd
-      - ConnectionStrings__InventoryConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=hvk2k5;Password=odoopwd
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_OrderDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
+      - ConnectionStrings__InventoryConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
       - ConnectionStrings__RedisConnection=redis:6379
       - Kafka__Host=kafka:29092
+      - EmailSettings__Password=${RESEND_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

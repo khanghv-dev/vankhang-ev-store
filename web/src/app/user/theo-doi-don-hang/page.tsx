@@ -52,7 +52,7 @@ const steps = [
 
 export default function OrderTrackingPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userEmail } = useAuth();
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<OrderDetail | null>(null);
 
@@ -65,7 +65,11 @@ export default function OrderTrackingPage() {
           return;
         }
 
-        const res = await fetch("http://localhost:5022/api/orders/my-orders");
+        const url = userEmail
+          ? `http://localhost:5022/api/orders/my-orders?email=${encodeURIComponent(userEmail)}`
+          : "http://localhost:5022/api/orders/my-orders";
+
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
@@ -73,8 +77,11 @@ export default function OrderTrackingPage() {
             const item = first.items?.[0];
             const milestone = first.status === "Paid" ? 1 : first.status === "Preparing" ? 2 : first.status === "Ready" || first.status === "Delivered" ? 3 : 0;
             
+            const rawId = typeof first.id === "string" ? first.id : first.id?.value ? String(first.id.value) : String(first.id || "");
+            const formattedOrderId = rawId ? rawId.substring(0, 8).toUpperCase() : "OD-VF-2026";
+
             setOrder({
-              orderId: first.id?.substring(0, 8).toUpperCase() || "OD-VF-2026",
+              orderId: formattedOrderId,
               customerName: first.customerName || "Khách hàng VinFast",
               vehicleName: item?.productName || "VinFast VF 8 Plus",
               colorName: "Tiêu chuẩn",

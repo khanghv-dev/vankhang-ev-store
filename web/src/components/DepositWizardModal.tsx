@@ -542,7 +542,7 @@ export default function DepositWizardModal({
                   Đang chuyển hướng...
                 </>
               ) : (
-                "TIẾN HÀNH THANH TOÁN TIỀN CỌC"
+                "💳 THANH TOÁN CỌC QUA VNPAY"
               )}
             </button>
           )}

@@ -152,11 +152,13 @@ public class PaymentWebhookController : ControllerBase
             return BadRequest(new { message = $"Incorrect payment amount. Expected {order.DepositAmount}, but received {amount}." });
         }
 
-        var vin = order.Items.FirstOrDefault()?.AssignedVin;
-        if (string.IsNullOrWhiteSpace(vin))
+        var vin = order.Items.FirstOrDefault()?.AssignedVin ?? string.Empty;
+
+        // Idempotency: nếu đơn hàng đã được thanh toán, trả OK luôn không xử lý lại
+        if (order.Status == OrderStatus.Paid || order.PaidAt.HasValue)
         {
-            _logger.LogError("[Webhook] Order ID {OrderId} does not have an assigned VIN.", orderId);
-            return BadRequest(new { message = "No vehicle VIN assigned to this order." });
+            _logger.LogInformation("[Webhook] Order ID {OrderId} already paid. Returning success idempotently.", orderId);
+            return Ok(new { message = "Order already paid." });
         }
 
         var txnNo = transactionNo ?? Guid.NewGuid().ToString().Replace("-", "").Substring(0, 15);
@@ -187,50 +189,51 @@ public class PaymentWebhookController : ControllerBase
                 _orderDbContext.Orders.Update(order);
                 await _orderDbContext.SaveChangesAsync(cancellationToken);
 
-                Guid vehicleId = Guid.Empty;
-                Guid? storeId = null;
-
-                const string selectVehicleSql = @"SELECT ""Id"", ""StoreId"" FROM vehicles WHERE ""Vin"" = @Vin LIMIT 1;";
-                using (var selectCmd = new NpgsqlCommand(selectVehicleSql, inventoryConnection, inventoryTransaction))
+                if (!string.IsNullOrWhiteSpace(vin))
                 {
-                    selectCmd.Parameters.AddWithValue("Vin", vin);
-                    using var reader = await selectCmd.ExecuteReaderAsync(cancellationToken);
-                    if (await reader.ReadAsync(cancellationToken))
+                    Guid vehicleId = Guid.Empty;
+                    Guid? storeId = null;
+
+                    const string selectVehicleSql = @"SELECT ""Id"", ""StoreId"" FROM vehicles WHERE ""Vin"" = @Vin LIMIT 1;";
+                    using (var selectCmd = new NpgsqlCommand(selectVehicleSql, inventoryConnection, inventoryTransaction))
                     {
-                        vehicleId = reader.GetGuid(0);
-                        storeId = reader.IsDBNull(1) ? null : reader.GetGuid(1);
+                        selectCmd.Parameters.AddWithValue("Vin", vin);
+                        using var reader = await selectCmd.ExecuteReaderAsync(cancellationToken);
+                        if (await reader.ReadAsync(cancellationToken))
+                        {
+                            vehicleId = reader.GetGuid(0);
+                            storeId = reader.IsDBNull(1) ? null : reader.GetGuid(1);
+                        }
                     }
-                }
 
-                if (vehicleId == Guid.Empty)
-                {
-                    throw new InvalidOperationException($"Vehicle with VIN {vin} was not found in inventory database.");
-                }
+                    if (vehicleId != Guid.Empty)
+                    {
+                        const string updateVehicleSql = @"
+                            UPDATE vehicles 
+                            SET ""Status"" = 4, ""LastModifiedAt"" = NOW() 
+                            WHERE ""Id"" = @VehicleId;";
 
-                const string updateVehicleSql = @"
-                    UPDATE vehicles 
-                    SET ""Status"" = 4, ""LastModifiedAt"" = NOW() 
-                    WHERE ""Id"" = @VehicleId;";
+                        using (var updateCmd = new NpgsqlCommand(updateVehicleSql, inventoryConnection, inventoryTransaction))
+                        {
+                            updateCmd.Parameters.AddWithValue("VehicleId", vehicleId);
+                            await updateCmd.ExecuteNonQueryAsync(cancellationToken);
+                        }
 
-                using (var updateCmd = new NpgsqlCommand(updateVehicleSql, inventoryConnection, inventoryTransaction))
-                {
-                    updateCmd.Parameters.AddWithValue("VehicleId", vehicleId);
-                    await updateCmd.ExecuteNonQueryAsync(cancellationToken);
-                }
+                        const string insertLogSql = @"
+                            INSERT INTO inventory_logs (""Id"", ""VehicleId"", ""FromStoreId"", ""ToStoreId"", ""Action"", ""Timestamp"", ""PerformedBy"", ""Notes"", ""CreatedAt"", ""LastModifiedAt"")
+                            VALUES (@Id, @VehicleId, @FromStoreId, NULL, @Action, NOW(), @PerformedBy, @Notes, NOW(), NOW());";
 
-                const string insertLogSql = @"
-                    INSERT INTO inventory_logs (""Id"", ""VehicleId"", ""FromStoreId"", ""ToStoreId"", ""Action"", ""Timestamp"", ""PerformedBy"", ""Notes"", ""CreatedAt"", ""LastModifiedAt"")
-                    VALUES (@Id, @VehicleId, @FromStoreId, NULL, @Action, NOW(), @PerformedBy, @Notes, NOW(), NOW());";
-
-                using (var logCmd = new NpgsqlCommand(insertLogSql, inventoryConnection, inventoryTransaction))
-                {
-                    logCmd.Parameters.AddWithValue("Id", Guid.NewGuid());
-                    logCmd.Parameters.AddWithValue("VehicleId", vehicleId);
-                    logCmd.Parameters.AddWithValue("FromStoreId", storeId.HasValue ? (object)storeId.Value : DBNull.Value);
-                    logCmd.Parameters.AddWithValue("Action", 4);
-                    logCmd.Parameters.AddWithValue("PerformedBy", "PaymentWebhook-Success");
-                    logCmd.Parameters.AddWithValue("Notes", $"Xe VIN {vin} chính thức chuyển sang RESERVED do đơn hàng {orderId} đã thanh toán thành công.");
-                    await logCmd.ExecuteNonQueryAsync(cancellationToken);
+                        using (var logCmd = new NpgsqlCommand(insertLogSql, inventoryConnection, inventoryTransaction))
+                        {
+                            logCmd.Parameters.AddWithValue("Id", Guid.NewGuid());
+                            logCmd.Parameters.AddWithValue("VehicleId", vehicleId);
+                            logCmd.Parameters.AddWithValue("FromStoreId", storeId.HasValue ? (object)storeId.Value : DBNull.Value);
+                            logCmd.Parameters.AddWithValue("Action", 4);
+                            logCmd.Parameters.AddWithValue("PerformedBy", "PaymentWebhook-Success");
+                            logCmd.Parameters.AddWithValue("Notes", $"Xe VIN {vin} chính thức chuyển sang RESERVED do đơn hàng {orderId} đã thanh toán thành công.");
+                            await logCmd.ExecuteNonQueryAsync(cancellationToken);
+                        }
+                    }
                 }
 
                 var eventMessage = new VehicleDepositedEvent(
@@ -292,7 +295,10 @@ public class PaymentWebhookController : ControllerBase
                 return StatusCode(500, new { message = "Lỗi toàn vẹn giao dịch: " + ex.Message });
             }
 
-            await _vehicleLockService.ReleaseVehicleLockAsync(vin);
+            if (!string.IsNullOrWhiteSpace(vin))
+            {
+                await _vehicleLockService.ReleaseVehicleLockAsync(vin);
+            }
 
             return Ok(new { message = "Giao dịch thanh toán thành công và xác thực xe hoàn tất." });
         }
@@ -320,7 +326,10 @@ public class PaymentWebhookController : ControllerBase
                 return StatusCode(500, new { message = "Lỗi khi cập nhật hủy đơn hàng: " + ex.Message });
             }
 
-            await _vehicleLockService.ReleaseVehicleLockAsync(vin);
+            if (!string.IsNullOrWhiteSpace(vin))
+            {
+                await _vehicleLockService.ReleaseVehicleLockAsync(vin);
+            }
             return Ok(new { message = "Đã hủy đơn hàng và giải phóng xe trong hệ thống." });
         }
     }

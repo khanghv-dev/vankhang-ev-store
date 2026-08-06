@@ -68,4 +68,12 @@ public sealed class User
     /// <summary>Returns true when an OTP has been issued and has not yet expired.</summary>
     public bool HasActiveOtp() =>
         OtpCode is not null && OtpExpiry.HasValue && OtpExpiry.Value > DateTime.UtcNow;
+
+    /// <summary>Marks email as confirmed directly for trusted OAuth 2.0 providers like Google.</summary>
+    public void ConfirmGoogleLogin()
+    {
+        IsEmailConfirmed = true;
+        OtpCode          = null;
+        OtpExpiry        = null;
+    }
 }

@@ -71,6 +71,12 @@ public sealed class RedisLockService : IVehicleLockService
 
     public async Task<bool> ReleaseVehicleLockAsync(string vin)
     {
+        if (string.IsNullOrWhiteSpace(vin))
+        {
+            _logger.LogDebug("[OrderService-VehicleLock] ReleaseVehicleLockAsync called with null/empty VIN. Skipping.");
+            return false;
+        }
+
         ValidateVin(vin);
 
         var key = BuildKey(vin);

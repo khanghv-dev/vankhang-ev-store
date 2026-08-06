@@ -18,7 +18,7 @@ interface InstallmentPeriod {
 
 export default function InstallmentSchedulePage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userEmail } = useAuth();
   const [loading, setLoading] = useState(true);
   
   const [remainingBalance, setRemainingBalance] = useState(0);
@@ -30,6 +30,8 @@ export default function InstallmentSchedulePage() {
   const [checkoutPeriod, setCheckoutPeriod] = useState<InstallmentPeriod | null>(null);
   const [paying, setPaying] = useState(false);
 
+  const [activeOrderId, setActiveOrderId] = useState<string>("");
+
   useEffect(() => {
     async function fetchInstallmentSchedule() {
       try {
@@ -39,38 +41,64 @@ export default function InstallmentSchedulePage() {
           return;
         }
 
-        const res = await fetch("http://localhost:5022/api/orders/my-orders");
+        const url = userEmail
+          ? `http://localhost:5022/api/orders/my-orders?email=${encodeURIComponent(userEmail)}`
+          : "http://localhost:5022/api/orders/my-orders";
+
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
-            // Find orders with deposit/loan plan
-            const loanOrder = data.find((o: any) => o.depositType === 2 || o.depositType === "CamKet" || o.totalAmount > 10000000);
-            if (loanOrder) {
-              const loanVal = loanOrder.totalAmount || 30000000;
-              setTotalLoan(loanVal);
-              setRemainingBalance(Math.round(loanVal * 0.6));
-              setBankName("Techcombank / VietinBank VinFast Partner");
-              setLoanTermMonths(12);
+            const loanOrder = data[0]; // Get customer's latest order
+            const rawId = typeof loanOrder.id === "string" ? loanOrder.id : loanOrder.id?.value ? String(loanOrder.id.value) : String(loanOrder.id || "ORD-2026");
+            setActiveOrderId(rawId);
 
-              const monthlyPrincipal = Math.round(loanVal / 12);
-              const generatedPeriods: InstallmentPeriod[] = Array.from({ length: 6 }).map((_, idx) => {
-                const monthNum = idx + 1;
-                const interestVal = Math.round((loanVal - (idx * monthlyPrincipal)) * 0.008);
-                const totalMon = monthlyPrincipal + interestVal;
-                const statusStr = idx < 2 ? "PAID" : idx === 2 ? "UNPAID_CURRENT" : "UNPAID_FUTURE";
-                return {
-                  periodId: monthNum,
-                  periodName: `Tháng ${monthNum}`,
-                  dueDate: `05/0${monthNum + 2}/2026`,
-                  amount: `${totalMon.toLocaleString("vi-VN")} đ`,
-                  principal: monthlyPrincipal,
-                  interest: `${interestVal.toLocaleString("vi-VN")} đ`,
-                  status: statusStr as any,
-                  transactionId: idx < 2 ? `FT260${idx + 1}512398` : undefined
-                };
-              });
-              setPeriods(generatedPeriods);
-            }
+            const vehiclePrice = loanOrder.totalAmount || 19400000;
+            const depositPaid = loanOrder.depositAmount || 2000000;
+            const loanVal = Math.max(vehiclePrice - depositPaid, 10000000);
+            
+            setTotalLoan(loanVal);
+            setBankName("Techcombank / VietinBank VinFast Partner");
+            setLoanTermMonths(12);
+
+            // Read saved paid periods from localStorage (default 0 for real data)
+            const savedPaidStr = localStorage.getItem(`installment_paid_${rawId}`);
+            const paidCount = savedPaidStr ? parseInt(savedPaidStr, 10) : 0;
+
+            const monthlyPrincipal = Math.round(loanVal / 12);
+            let currentRemaining = loanVal - (paidCount * monthlyPrincipal);
+
+            const baseDate = loanOrder.createdAt ? new Date(loanOrder.createdAt) : new Date();
+
+            const generatedPeriods: InstallmentPeriod[] = Array.from({ length: 12 }).map((_, idx) => {
+              const monthNum = idx + 1;
+              const dueDateObj = new Date(baseDate);
+              dueDateObj.setMonth(baseDate.getMonth() + monthNum);
+
+              const interestVal = Math.round(Math.max(loanVal - (idx * monthlyPrincipal), 0) * 0.007);
+              const totalMon = monthlyPrincipal + interestVal;
+
+              let statusStr: "PAID" | "UNPAID_CURRENT" | "UNPAID_FUTURE" = "UNPAID_FUTURE";
+              if (idx < paidCount) {
+                statusStr = "PAID";
+              } else if (idx === paidCount) {
+                statusStr = "UNPAID_CURRENT";
+              }
+
+              return {
+                periodId: monthNum,
+                periodName: `Kỳ ${monthNum} (Tháng ${dueDateObj.getMonth() + 1}/${dueDateObj.getFullYear()})`,
+                dueDate: dueDateObj.toLocaleDateString("vi-VN"),
+                amount: `${totalMon.toLocaleString("vi-VN")} đ`,
+                principal: monthlyPrincipal,
+                interest: `${interestVal.toLocaleString("vi-VN")} đ`,
+                status: statusStr,
+                transactionId: idx < paidCount ? `FT260${idx + 1}512398` : undefined
+              };
+            });
+
+            setRemainingBalance(Math.max(currentRemaining, 0));
+            setPeriods(generatedPeriods);
           }
         }
       } catch (error) {
@@ -95,26 +123,34 @@ export default function InstallmentSchedulePage() {
     setPaying(true);
     
     setTimeout(() => {
-      setPeriods((prevPeriods) =>
-        prevPeriods.map((p) => {
+      let newPaidCount = 0;
+      setPeriods((prevPeriods) => {
+        const updated = prevPeriods.map((p) => {
           if (p.periodId === checkoutPeriod.periodId) {
             return {
               ...p,
-              status: "PAID",
+              status: "PAID" as const,
               transactionId: `FT2618${Math.floor(100000 + Math.random() * 900000)}`,
             };
           }
           if (p.periodId === checkoutPeriod.periodId + 1) {
             return {
               ...p,
-              status: "UNPAID_CURRENT",
+              status: "UNPAID_CURRENT" as const,
             };
           }
           return p;
-        })
-      );
+        });
+
+        newPaidCount = updated.filter(p => p.status === "PAID").length;
+        if (activeOrderId) {
+          localStorage.setItem(`installment_paid_${activeOrderId}`, String(newPaidCount));
+        }
+
+        return updated;
+      });
       
-      setRemainingBalance((prev) => prev - checkoutPeriod.principal);
+      setRemainingBalance((prev) => Math.max(prev - checkoutPeriod.principal, 0));
       setPaying(false);
       setCheckoutPeriod(null);
     }, 1500);
@@ -154,6 +190,24 @@ export default function InstallmentSchedulePage() {
           </div>
         </div>
 
+        {periods.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-neutral-100 p-12 text-center shadow-xl space-y-4">
+            <div className="text-4xl">📄</div>
+            <h2 className="text-lg font-bold text-neutral-800">Chưa có hợp đồng trả góp nào</h2>
+            <p className="text-xs text-neutral-500 max-w-md mx-auto">
+              Bạn chưa có hợp đồng trả góp hoặc đơn hàng đặt cọc nào trên hệ thống. Hãy đăng ký đặt cọc xe điện VinFast để nhận thông tin gói vay và lịch trả góp chi tiết.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/products"
+                className="inline-block px-6 py-3 bg-[#E30613] text-white rounded-xl text-xs font-extrabold uppercase tracking-wider hover:bg-red-700 transition shadow-md"
+              >
+                Khám phá danh mục xe
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Loan Summary Box */}
         <div className="bg-white rounded-2xl border border-neutral-100 p-6 sm:p-8 shadow-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 relative overflow-hidden">
           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#E30613]"></div>
@@ -186,9 +240,7 @@ export default function InstallmentSchedulePage() {
             Chi tiết lịch thanh toán định kỳ
           </h2>
 
-          {periods.length > 0 ? (
-            <>
-              {/* Desktop Table View */}
+          {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -315,24 +367,9 @@ export default function InstallmentSchedulePage() {
               </div>
             ))}
           </div>
-            </>
-          ) : (
-            <div className="py-12 text-center space-y-3">
-              <div className="text-4xl">💳</div>
-              <h3 className="text-base font-bold text-neutral-800">Bạn chưa có lịch trình trả góp nào</h3>
-              <p className="text-xs text-neutral-500 max-w-sm mx-auto">
-                Khi đăng ký gói mua xe trả góp với các ngân hàng liên kết, lịch hẹn đóng tiền định kỳ hàng tháng sẽ được cập nhật tự động tại đây.
-              </p>
-              <Link
-                href="/ho-tro/mua-hang-tra-gop"
-                className="inline-block bg-[#E30613] hover:bg-red-700 text-white font-bold text-xs px-5 py-2 rounded-xl transition-colors shadow-sm"
-              >
-                Tìm hiểu thủ tục mua xe trả góp 0%
-              </Link>
-            </div>
-          )}
-
         </div>
+      </>
+    )}
 
         {/* Checkout Simulation Dialog Modal */}
         {checkoutPeriod && (
@@ -396,7 +433,6 @@ export default function InstallmentSchedulePage() {
                   </button>
                 </div>
               )}
-
             </div>
           </div>
         )}

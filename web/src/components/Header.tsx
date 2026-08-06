@@ -823,16 +823,21 @@ function MobileNavItem({
 // ─── Main Header ────────────────────────────────────────────────────────────
 export default function Header() {
   const router = useRouter();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, userEmail, userPicture, userName, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(765); // 12m 45s
   const [globalSearch, setGlobalSearch] = useState("");
   const [myOrders, setMyOrders] = useState<any[]>([]);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     async function fetchMyOrders() {
+      if (!userEmail) {
+        setMyOrders([]);
+        return;
+      }
       try {
-        const res = await fetch("http://localhost:5022/api/orders/my-orders");
+        const res = await fetch(`http://localhost:5022/api/orders/my-orders?email=${encodeURIComponent(userEmail)}`);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
@@ -844,7 +849,7 @@ export default function Header() {
       }
     }
     fetchMyOrders();
-  }, []);
+  }, [userEmail]);
 
   const handleGlobalSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1054,18 +1059,43 @@ export default function Header() {
 
               {isAuthenticated ? (
                 <div className="relative group">
-                  <button className="flex items-center justify-center h-9 w-9 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 hover:shadow-sm transition-all focus:outline-none cursor-pointer">
-                    <svg className="h-4.5 w-4.5 text-gray-600 transition-colors group-hover:text-[#E30613]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                    </svg>
+                  <button className="flex items-center justify-center h-9 w-9 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-[#E30613] hover:shadow-md transition-all focus:outline-none cursor-pointer overflow-hidden p-0.5">
+                    {userPicture && !imgError ? (
+                      <img
+                        src={userPicture}
+                        alt="Google Avatar"
+                        referrerPolicy="no-referrer"
+                        onError={() => setImgError(true)}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <svg className="h-4.5 w-4.5 text-gray-600 transition-colors group-hover:text-[#E30613]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                      </svg>
+                    )}
                   </button>
                   
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 top-full z-50 pt-2.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 translate-y-1 group-hover:translate-y-0">
                     <div className="w-60 rounded-xl border border-gray-100 bg-white p-1.5 shadow-2xl">
-                      <div className="px-3.5 py-2.5 border-b border-gray-100 mb-1.5">
-                        <p className="text-xs font-bold text-gray-900">Thành viên VinFast</p>
-                        <p className="text-[10px] text-gray-400 font-semibold truncate">Tài khoản cá nhân</p>
+                      <div className="px-3.5 py-2.5 border-b border-gray-100 mb-1.5 flex items-center gap-2.5">
+                        {userPicture && !imgError ? (
+                          <img
+                            src={userPicture}
+                            alt="Google Avatar"
+                            referrerPolicy="no-referrer"
+                            onError={() => setImgError(true)}
+                            className="w-8 h-8 rounded-full border border-gray-200 shrink-0 object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-red-50 text-[#E30613] font-bold flex items-center justify-center text-xs shrink-0">
+                            VF
+                          </div>
+                        )}
+                        <div className="overflow-hidden text-left">
+                          <p className="text-xs font-bold text-gray-900 truncate">{userName || "Thành viên VinFast"}</p>
+                          <p className="text-[10px] text-gray-400 font-semibold truncate">{userEmail || "Tài khoản cá nhân"}</p>
+                        </div>
                       </div>
 
                       <div className="space-y-0.5">
@@ -1305,15 +1335,36 @@ export default function Header() {
                 Đặt cọc ngay
               </Link>
               {isAuthenticated ? (
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileOpen(false);
-                  }}
-                  className="flex w-full items-center justify-center rounded-full border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 cursor-pointer"
-                >
-                  Đăng xuất
-                </button>
+                <div className="space-y-3 w-full">
+                  <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-2xl border border-gray-150">
+                    {userPicture && !imgError ? (
+                      <img
+                        src={userPicture}
+                        alt="Google Avatar"
+                        referrerPolicy="no-referrer"
+                        onError={() => setImgError(true)}
+                        className="w-9 h-9 rounded-full object-cover border border-gray-200 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-red-50 text-[#E30613] font-bold flex items-center justify-center text-xs shrink-0">
+                        VF
+                      </div>
+                    )}
+                    <div className="text-left overflow-hidden">
+                      <p className="text-xs font-bold text-gray-900 truncate">{userName || "Thành viên VinFast"}</p>
+                      <p className="text-[10px] text-gray-400 font-semibold truncate">{userEmail || "Tài khoản cá nhân"}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileOpen(false);
+                    }}
+                    className="flex w-full items-center justify-center rounded-full border border-red-200 text-red-600 bg-red-50/50 hover:bg-red-50 px-5 py-2.5 text-sm font-semibold cursor-pointer transition-colors"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
               ) : (
                 <Link
                   href="/login"

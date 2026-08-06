@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 const API_BASE = "http://localhost:5022/api/auth";
 
@@ -14,6 +15,56 @@ export default function AuthPage() {
   const { login } = useAuth();
   const [screen, setScreen] = useState<Screen>("login");
   const [registeredEmail, setRegisteredEmail] = useState("");
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse?.credential) return;
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Parse JWT payload from Google credential
+      const base64Url = credentialResponse.credential.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const payload = JSON.parse(jsonPayload);
+
+      const res = await fetch(`${API_BASE}/google-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: payload.email,
+          name: payload.name,
+          pictureUrl: payload.picture,
+        }),
+      });
+
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (e) {
+        console.error("Không thể decode JSON từ API:", text);
+      }
+
+      if (res.ok && data?.accessToken) {
+        setSuccess("Đăng nhập bằng Google thành công!");
+        login(data.accessToken, payload.picture, payload.name);
+        router.push("/");
+      } else {
+        setError(data?.message || "Đăng nhập Google không thành công.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Không thể xác thực với Google. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Input states
   const [regEmail, setRegEmail] = useState("");
@@ -498,6 +549,17 @@ export default function AuthPage() {
                 <div className="flex-1 h-px bg-neutral-100"></div>
               </div>
 
+              <div className="flex justify-center my-2">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError("Đăng nhập bằng Google thất bại.")}
+                  shape="pill"
+                  size="large"
+                  text="signup_with"
+                  locale="vi"
+                />
+              </div>
+
               <p className="text-center text-sm text-neutral-500 font-medium">
                 Đã có tài khoản?
                 <button
@@ -728,6 +790,17 @@ export default function AuthPage() {
                 <div className="flex-1 h-px bg-neutral-100"></div>
                 <span className="text-xs text-neutral-300 font-semibold">hoặc</span>
                 <div className="flex-1 h-px bg-neutral-100"></div>
+              </div>
+
+              <div className="flex justify-center my-2">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError("Đăng nhập bằng Google thất bại.")}
+                  shape="pill"
+                  size="large"
+                  text="signin_with"
+                  locale="vi"
+                />
               </div>
 
               <p className="text-center text-sm text-neutral-500 font-medium">

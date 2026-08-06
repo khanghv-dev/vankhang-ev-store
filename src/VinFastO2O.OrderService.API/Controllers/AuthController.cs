@@ -206,6 +206,43 @@ public sealed class AuthController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Authenticates or registers a user via Google OAuth 2.0.
+    /// </summary>
+    [HttpPost("google-login")]
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GoogleLogin(
+        [FromBody] GoogleLoginRequestDto dto,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Email))
+            return BadRequest(new ErrorResponseDto("Email từ Google không hợp lệ."));
+
+        try
+        {
+            var command = new GoogleLoginCommand(dto.Email, dto.Name, dto.PictureUrl);
+            var result  = await _mediator.Send(command, cancellationToken);
+
+            _logger.LogInformation(
+                "[Auth] Google Login successful — UserId: {UserId} | Email: {Email}",
+                result.UserId, MaskEmail(dto.Email));
+
+            return Ok(new LoginResponseDto(
+                result.UserId,
+                result.Email,
+                result.AccessToken,
+                result.ExpiresAt,
+                "Đăng nhập Google thành công."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Auth] Error during Google login — Email: {Email}", MaskEmail(dto.Email));
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new ErrorResponseDto("Đã xảy ra lỗi khi đăng nhập bằng Google."));
+        }
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     /// <summary>Masks the local part of an email address for safe logging.</summary>
@@ -251,3 +288,6 @@ public record LoginUnconfirmedResponseDto(string Message, string ErrorCode);
 
 /// <summary>Uniform error envelope returned on 4xx/5xx responses.</summary>
 public record ErrorResponseDto(string Message);
+
+/// <summary>Payload for POST /api/auth/google-login.</summary>
+public record GoogleLoginRequestDto(string Email, string? Name, string? PictureUrl);
