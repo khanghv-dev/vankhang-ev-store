@@ -1,10 +1,10 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
   # ─── Relational Database (PostgreSQL) ───
   postgres:
     image: postgres:16-alpine
-    container_name: vinfast-postgres
+    container_name: evo2o-postgres
     restart: always
     ports:
       - "5433:5432"
@@ -23,7 +23,7 @@ services:
   # ─── Document Database (MongoDB) ───
   mongodb:
     image: mongo:7.0
-    container_name: vinfast-mongodb
+    container_name: evo2o-mongodb
     restart: always
     ports:
       - "27017:27017"
@@ -38,7 +38,7 @@ services:
   # ─── Cache & State Store (Redis) ───
   redis:
     image: redis:7.2-alpine
-    container_name: vinfast-redis
+    container_name: evo2o-redis
     restart: always
     ports:
       - "6379:6379"
@@ -53,7 +53,7 @@ services:
   # ─── Messaging Queue (Apache Kafka - KRaft Mode) ───
   kafka:
     image: confluentinc/cp-kafka:7.6.0
-    container_name: vinfast-kafka
+    container_name: evo2o-kafka
     restart: always
     ports:
       - "9092:9092"
@@ -80,7 +80,7 @@ services:
   # ─── Object Storage (MinIO) ───
   minio:
     image: minio/minio:RELEASE.2024-01-28T22-35-53Z
-    container_name: vinfast-minio
+    container_name: evo2o-minio
     restart: always
     ports:
       - "9000:9000"
@@ -94,7 +94,7 @@ services:
 
   createbuckets:
     image: minio/mc
-    container_name: vinfast-minio-mc
+    container_name: evo2o-minio-mc
     depends_on:
       - minio
     entrypoint: >
@@ -102,8 +102,8 @@ services:
       echo 'Waiting for MinIO...';
       sleep 5;
       /usr/bin/mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadminpassword};
-      /usr/bin/mc mb local/vinfast-product-images;
-      /usr/bin/mc anonymous set download local/vinfast-product-images;
+      /usr/bin/mc mb local/evo2o-product-images;
+      /usr/bin/mc anonymous set download local/evo2o-product-images;
       exit 0;
       "
 
@@ -111,22 +111,22 @@ services:
   inventory-service:
     build:
       context: ./src
-      dockerfile: VinFastO2O.InventoryService.API/Dockerfile
-    container_name: vinfast-inventory-service
+      dockerfile: EvO2O.InventoryService.API/Dockerfile
+    container_name: evo2o-inventory-service
     restart: always
     ports:
       - "5186:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=EvO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
       - ConnectionStrings__MongoConnection=mongodb://mongodb:27017
       - ConnectionStrings__RedisConnection=redis:6379
       - Kafka__Host=kafka:29092
       - S3Settings__ServiceUrl=http://minio:9000
       - S3Settings__AccessKey=${MINIO_ROOT_USER:-minioadmin}
       - S3Settings__SecretKey=${MINIO_ROOT_PASSWORD:-minioadminpassword}
-      - S3Settings__BucketName=vinfast-product-images
-      - S3Settings__PublicUrlPrefix=http://localhost:9000/vinfast-product-images
+      - S3Settings__BucketName=evo2o-product-images
+      - S3Settings__PublicUrlPrefix=http://localhost:9000/evo2o-product-images
     depends_on:
       postgres:
         condition: service_healthy
@@ -141,18 +141,21 @@ services:
   order-service:
     build:
       context: ./src
-      dockerfile: VinFastO2O.OrderService.API/Dockerfile
-    container_name: vinfast-order-service
+      dockerfile: EvO2O.OrderService.API/Dockerfile
+    container_name: evo2o-order-service
     restart: always
     ports:
       - "5022:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_OrderDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
-      - ConnectionStrings__InventoryConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=EvO2O_OrderDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
+      - ConnectionStrings__InventoryConnection=Host=postgres;Port=5432;Database=EvO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
       - ConnectionStrings__RedisConnection=redis:6379
       - Kafka__Host=kafka:29092
       - EmailSettings__Password=${RESEND_API_KEY}
+      - VnPay__TmnCode=2QXUYBXA
+      - VnPay__HashSecret=RA35B5E1FAEA2B30F560EC30E5EC09CC
+      - VnPay__BaseUrl=http://localhost:5022/api/payments/mock-gate
     depends_on:
       postgres:
         condition: service_healthy

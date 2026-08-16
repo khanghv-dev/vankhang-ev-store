@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { API_CONFIG } from "@/config/apiConfig";
 
 interface DepositWizardModalProps {
@@ -77,6 +79,9 @@ export default function DepositWizardModal({
   product,
   selectedColor,
 }: DepositWizardModalProps) {
+  const router = useRouter();
+  const { isAuthenticated, userEmail, userName } = useAuth();
+
   const [step, setStep] = useState(1);
   const [batteryOption, setBatteryOption] = useState<"ThuePin" | "MuaPin">("ThuePin");
   const [selectedCity, setSelectedCity] = useState("hanoi");
@@ -116,14 +121,20 @@ export default function DepositWizardModal({
   };
 
   const handlePaymentSubmit = async () => {
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập để tiến hành đặt cọc!");
+      router.push(`/login`);
+      return;
+    }
+
     setLoading(true);
     setErrorMessage("");
 
     const orderPayload = {
       customerId: "c1111111-1111-1111-1111-111111111111", // mock customer ID
-      customerName: "Nguyễn Văn A",
-      customerEmail: "nguyenvana@gmail.com",
-      customerPhone: "0987654321",
+      customerName: userName || localStorage.getItem("userName") || "Nguyễn Văn A",
+      customerEmail: userEmail || localStorage.getItem("userEmail") || "nguyenvana@gmail.com",
+      customerPhone: localStorage.getItem("userPhone") || "0987654321",
       customerIdCard: "012345678912",
       productId: getBackendProductId(product.id),
       storeId: selectedShowroom.id,

@@ -211,7 +211,7 @@ function PartShowcase() {
                   {part.specs.map((spec, i) => (
                     <span
                       key={i}
-                      className="inline-block bg-gray-50 border border-gray-100 text-gray-600 rounded px-2 py-0.5 text-[10px] font-medium"
+                      className="spec-pill product-feature-tag inline-flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-md px-2.5 py-0.5 text-[12px] sm:text-[12.5px] font-semibold"
                     >
                       {spec}
                     </span>

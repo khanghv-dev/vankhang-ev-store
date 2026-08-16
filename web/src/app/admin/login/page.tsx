@@ -67,7 +67,7 @@ export default function AdminLoginPage() {
 
         <div className="text-center mb-8 relative">
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-            VINFAST O2O
+            EV O2O ADMIN
           </h1>
           <p className="text-xs font-semibold tracking-widest text-slate-400 uppercase mt-2">
             Hệ thống Quản trị viên

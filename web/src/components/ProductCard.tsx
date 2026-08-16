@@ -134,13 +134,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           </h3>
         </Link>
 
-        {/* Specs List */}
+        {/* Specs List / Feature Pills */}
         {specs && specs.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {specs.map((spec, index) => (
               <span
                 key={index}
-                className="inline-flex items-center rounded-md bg-[var(--color-surface-subtle)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)] border border-[var(--color-border)]"
+                className="spec-pill product-feature-tag inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-[12px] sm:text-[12.5px] font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 leading-tight transition-colors hover:bg-slate-200/80"
               >
                 {spec}
               </span>

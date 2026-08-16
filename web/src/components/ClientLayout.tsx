@@ -4,9 +4,10 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FloatingChatbot from "@/components/FloatingChatbot";
 
 /// <summary>
-/// ClientLayout encapsulates the customer-facing website layout (Header + Main Content + Footer).
+/// ClientLayout encapsulates the customer-facing website layout (Header + Main Content + Footer + Floating Chatbot).
 /// If the current route is under /admin, it bypasses the website Header and Footer completely
 /// to ensure total isolation between Admin Panel and Client Website.
 /// </summary>
@@ -23,6 +24,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <Header />
       <div className="flex-1">{children}</div>
       <Footer />
+      <FloatingChatbot />
     </>
   );
 }

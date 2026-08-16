@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: inventory-service
@@ -62,9 +62,9 @@ spec:
                   name: minio-secret
                   key: secret-key
             - name: S3Settings__BucketName
-              value: vinfast-product-images
+              value: evo2o-product-images
             - name: S3Settings__PublicUrlPrefix
-              value: http://minio.vinfast-o2o.com/vinfast-product-images
+              value: http://minio.vinfast-o2o.com/evo2o-product-images
           livenessProbe:
             httpGet:
               path: /health

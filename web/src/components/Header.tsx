@@ -894,14 +894,14 @@ export default function Header() {
             <Link
               href="/"
               className="inline-flex items-center gap-2.5 flex-shrink-0 group/logo"
-              aria-label="VinFast O2O — Trang chủ"
+              aria-label="EV O2O — Trang chủ"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E30613] shadow-md transition-transform duration-200 group-hover/logo:scale-105">
-                <span className="text-base font-black text-white leading-none">V</span>
+                <span className="text-sm font-black text-white leading-none">EV</span>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-sm font-black text-gray-900 tracking-wide">VinFast</span>
-                <span className="text-[10px] text-[#E30613] font-bold tracking-[0.2em] uppercase">O2O Platform</span>
+                <span className="text-sm font-black text-gray-900 tracking-wide">EV O2O</span>
+                <span className="text-[10px] text-[#E30613] font-bold tracking-[0.2em] uppercase">Ecosystem</span>
               </div>
             </Link>
 

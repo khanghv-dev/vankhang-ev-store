@@ -556,7 +556,6 @@ export default function AuthPage() {
                   shape="pill"
                   size="large"
                   text="signup_with"
-                  locale="vi"
                 />
               </div>
 
@@ -799,7 +798,6 @@ export default function AuthPage() {
                   shape="pill"
                   size="large"
                   text="signin_with"
-                  locale="vi"
                 />
               </div>
 

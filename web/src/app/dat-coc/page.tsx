@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { API_CONFIG } from "@/config/apiConfig";
 
 interface VehicleCampaign {
@@ -70,6 +72,9 @@ const CAMPAIGN_VEHICLES: VehicleCampaign[] = [
 ];
 
 export default function DepositCampaign() {
+  const router = useRouter();
+  const { isAuthenticated, userEmail, userName } = useAuth();
+
   // Target deadline: June 30, 2026
   const TARGET_DATE = useMemo(() => new Date("2026-06-30T23:59:59").getTime(), []);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -102,6 +107,12 @@ export default function DepositCampaign() {
   const [showrooms, setShowrooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Pre-fill user data if logged in
+  useEffect(() => {
+    if (userName && !customerName) setCustomerName(userName);
+    if (userEmail && !customerEmail) setCustomerEmail(userEmail);
+  }, [userName, userEmail]);
 
   // Load showrooms dynamically
   useEffect(() => {
@@ -302,6 +313,11 @@ export default function DepositCampaign() {
   };
 
   const triggerPreOrder = (vehicle: VehicleCampaign) => {
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập để tiến hành đặt cọc xe!");
+      router.push(`/login?redirect=/dat-coc`);
+      return;
+    }
     const chosenTier = selectedTiers[vehicle.id] || "flexible";
     setActiveCheckout({ vehicle, tier: chosenTier });
     setPaymentSuccess(false);

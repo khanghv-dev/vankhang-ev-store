@@ -96,7 +96,7 @@ const ARTICLE_DB: Record<string, ArticleData> = {
       "Chia sẻ dữ liệu: VinFast không bán hoặc chia sẻ thông tin cho bên thứ ba ngoại trừ các đại lý ủy quyền bàn giao xe và đối tác thanh toán liên kết.",
       "Quyền của khách hàng: Quý khách có quyền yêu cầu tra cứu, chỉnh sửa hoặc yêu cầu xóa bỏ dữ liệu cá nhân bất kỳ lúc nào."
     ],
-    note: "Mọi thắc mắc liên quan đến xử lý dữ liệu cá nhân, Quý khách vui lòng gửi email về privacy@vinfast.vn hoặc gọi Hotline 1800 1260."
+    note: "Mọi thắc mắc liên quan đến xử lý dữ liệu cá nhân, Quý khách vui lòng gửi email về support@evo2o.vn hoặc gọi Hotline 1800 1260."
   },
   "quy-dinh-dat-mua": {
     title: "Quy định & Thỏa thuận đặt cọc giữ chỗ mua xe",
@@ -206,7 +206,7 @@ const ARTICLE_DB: Record<string, ArticleData> = {
       "Môi trường làm việc: Văn phòng hiện đại, văn hóa đa quốc gia với các chuyên gia đến từ hơn 20 quốc gia trên thế giới.",
       "Chế độ đãi ngộ: Lương thưởng cạnh tranh, gói bảo hiểm sức khỏe cao cấp Vingroup và ưu đãi mua xe điện VinFast cho nhân viên.",
       "Quy trình tuyển dụng: (1) Nộp hồ sơ Online ➔ (2) Phỏng vấn Chuyên môn ➔ (3) Đánh giá Năng lực ➔ (4) Nhận thư mời làm việc (Offer).",
-      "Kênh nộp hồ sơ: Gửi CV trực tiếp qua email tuyendung@vinfast.vn hoặc theo dõi cổng tuyển dụng chính thức Vingroup Careers."
+      "Kênh nộp hồ sơ: Gửi CV trực tiếp qua email careers@evo2o.vn hoặc theo dõi cổng tuyển dụng chính thức."
     ],
     note: "VinFast luôn chào đón những ứng viên tài năng, giàu nhiệt huyết và khát khao khẳng định giá trị bản thân."
   }

@@ -64,12 +64,15 @@ export default function AdminNotificationToast() {
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${API_CONFIG.BASE_URL}/hubs/notification`, {
         accessTokenFactory: () => adminToken,
-        skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets
+        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .configureLogging(signalR.LogLevel.None)
       .build();
+
+    connection.onclose((err) => {
+      console.debug("[SignalR Client] Connection closed gracefully:", err?.message);
+    });
 
     // Event listener when a customer pays deposit successfully
     connection.on("ReceiveNewDepositNotification", (data: any) => {

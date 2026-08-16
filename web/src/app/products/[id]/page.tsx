@@ -3,7 +3,9 @@
 import { use, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import DepositWizardModal from "@/components/DepositWizardModal";
+import { useAuth } from "@/context/AuthContext";
 
 const ORDER_API = "http://localhost:5022";
 
@@ -430,6 +432,9 @@ export default function ProductDetailPage({
 }) {
   const { id } = use(params);
 
+  const router = useRouter();
+  const { isAuthenticated, userEmail, userName } = useAuth();
+
   // Look up product, fallback to Klara S if id doesn't match
   const product = PRODUCT_DATABASE[id] || PRODUCT_DATABASE["vinfast-klara-s-2026"];
 
@@ -452,21 +457,35 @@ export default function ProductDetailPage({
   const [showrooms, setShowrooms] = useState<{ id: string; name: string }[]>([]);
   const [selectedStore, setSelectedStore] = useState<string>("");
 
-  // Pre-fill from localStorage if user is logged in
+  // Pre-fill from localStorage / AuthContext if user is logged in
   useEffect(() => {
-    const name = localStorage.getItem("userName") || "";
+    const name = userName || localStorage.getItem("userName") || "";
     const phone = localStorage.getItem("userPhone") || "";
-    const email = localStorage.getItem("userEmail") || "";
+    const email = userEmail || localStorage.getItem("userEmail") || "";
     if (name) setBuyerName(name);
     if (phone) setBuyerPhone(phone);
     if (email) setBuyerEmail(email);
-  }, []);
+  }, [userName, userEmail]);
 
   // Helper Guid validator
   const isGuid = (val: string) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(val);
 
+  const handleOpenDeposit = () => {
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập để tiến hành đặt cọc xe!");
+      router.push(`/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : `/products/${id}`)}`);
+      return;
+    }
+    setIsDepositOpen(true);
+  };
+
   // Fetch showrooms when modal opens
   const openBuyNow = async () => {
+    if (!isAuthenticated) {
+      alert("Vui lòng đăng nhập để tiến hành mua hàng!");
+      router.push(`/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : `/products/${id}`)}`);
+      return;
+    }
     setOrderError(null);
     setIsBuyNowOpen(true);
 
@@ -941,7 +960,7 @@ export default function ProductDetailPage({
             {/* CTA Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
               <button
-                onClick={() => setIsDepositOpen(true)}
+                onClick={handleOpenDeposit}
                 className="w-full bg-[#E30613] hover:bg-[#b8040d] text-white font-extrabold py-4 px-6 rounded-2xl shadow-lg hover:shadow-rose-100 hover:shadow-2xl transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-2 text-md uppercase tracking-wider"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

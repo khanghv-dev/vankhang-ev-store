@@ -1,7 +1,7 @@
--- ============================================================
+﻿-- ============================================================
 -- VinFast O2O Platform — Authentication Service
 -- Schema: Users table with secure OTP storage
--- Database: VinFastO2O_AuthDb / VinFastO2O_AuthDb_Dev
+-- Database: EvO2O_AuthDb / EvO2O_AuthDb_Dev
 -- Author: Database Engineering Team
 -- Created: 2026-06-18
 -- ============================================================

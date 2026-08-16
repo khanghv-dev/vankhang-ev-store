@@ -265,7 +265,7 @@ export default function AdminDashboardPage() {
               </span>
             </div>
             <p className="text-xs text-[#6B7280] mt-1.5 flex items-center gap-2">
-              Xin chào, <span className="font-semibold text-[#E60012]">{adminUser.username}</span> ({adminUser.email})
+              Tổng quan hoạt động kinh doanh, đơn đặt cọc và dịch vụ pin hôm nay
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
             </p>
           </div>

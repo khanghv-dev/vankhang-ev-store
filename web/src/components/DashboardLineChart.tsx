@@ -59,11 +59,15 @@ export default function DashboardLineChart() {
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${API_CONFIG.BASE_URL}/hubs/notification`, {
         accessTokenFactory: () => adminToken,
-        skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets
+        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
       })
-      .withAutomaticReconnect()
+      .withAutomaticReconnect([0, 2000, 5000, 10000])
+      .configureLogging(signalR.LogLevel.None)
       .build();
+
+    connection.onclose((err) => {
+      console.debug("[SignalR Chart] Connection closed gracefully:", err?.message);
+    });
 
     connection.on("ReceiveNewDepositNotification", (data: any) => {
       console.log("[SignalR Chart Updated]", data);
@@ -101,7 +105,7 @@ export default function DashboardLineChart() {
 
     return () => {
       isStopped = true;
-      if (connection.state === signalR.HubConnectionState.Connected) {
+      if (connection.state !== signalR.HubConnectionState.Disconnected) {
         connection.stop().catch(() => {});
       }
     };

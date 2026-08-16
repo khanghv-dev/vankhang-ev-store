@@ -1,4 +1,4 @@
-# EV O2O (Online-to-Offline) Ecosystem
+﻿# EV O2O (Online-to-Offline) Ecosystem
 
 EV O2O là hệ thống Online-to-Offline toàn diện dành cho việc quản lý dịch vụ, kho phụ tùng/pin xe điện và hỗ trợ đặt lịch, thuê/thay pin cho hệ sinh thái xe điện (Electric Vehicles). Hệ thống kết nối liền mạch giữa nền tảng trực tuyến (Web Admin/Customer Portal, Mobile App) và hạ tầng vận hành trực tiếp (Showroom, Trạm dịch vụ, Kho hàng).
 
@@ -45,14 +45,14 @@ Dự án được thiết kế theo mô hình Microservices áp dụng chuẩn C
 ```text
 ev-o2o-ecosystem/
 ├── src/                                     # Backend Microservices (.NET 8)
-│   ├── VinFastO2O.OrderService.API/         # API Endpoint Order Service
-│   ├── VinFastO2O.OrderService.Application/ # Business Logic & Use Cases
-│   ├── VinFastO2O.OrderService.Domain/      # Entities, Aggregates & Domain Events
-│   ├── VinFastO2O.OrderService.Infrastructure/# Persistence, Repositories, EF Core
-│   ├── VinFastO2O.InventoryService.API/     # API Endpoint Inventory Service
-│   ├── VinFastO2O.InventoryService.Application/
-│   ├── VinFastO2O.InventoryService.Domain/
-│   └── VinFastO2O.InventoryService.Infrastructure/
+│   ├── EvO2O.OrderService.API/         # API Endpoint Order Service
+│   ├── EvO2O.OrderService.Application/ # Business Logic & Use Cases
+│   ├── EvO2O.OrderService.Domain/      # Entities, Aggregates & Domain Events
+│   ├── EvO2O.OrderService.Infrastructure/# Persistence, Repositories, EF Core
+│   ├── EvO2O.InventoryService.API/     # API Endpoint Inventory Service
+│   ├── EvO2O.InventoryService.Application/
+│   ├── EvO2O.InventoryService.Domain/
+│   └── EvO2O.InventoryService.Infrastructure/
 ├── web/                                     # Web Admin & Customer Portal (Next.js)
 │   ├── src/app/                             # App Router (Client & Admin pages)
 │   ├── src/components/                      # Shared UI Components

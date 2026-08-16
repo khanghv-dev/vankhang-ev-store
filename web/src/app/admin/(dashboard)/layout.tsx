@@ -134,12 +134,12 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           {/* Sidebar Top Logo */}
           <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between">
             <Link href="/admin" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#E11D2E] to-[#C8102E] flex items-center justify-center font-black text-white text-xl shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform">
-                V
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#E11D2E] to-[#C8102E] flex items-center justify-center font-black text-white text-base shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform">
+                EV
               </div>
               <div>
                 <div className="font-extrabold text-base tracking-tight text-[#111827] flex items-center gap-1.5">
-                  VinFast O2O <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-[#E11D2E] text-[10px] font-mono border border-red-200">Admin</span>
+                  EV O2O <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-[#E11D2E] text-[10px] font-mono border border-red-200">Admin</span>
                 </div>
                 <div className="text-[10px] text-[#6B7280] font-mono">Platform Management Portal</div>
               </div>
@@ -329,7 +329,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-[#1F2937] truncate">{adminUser?.username || "Super Admin"}</div>
-                        <div className="text-[10px] text-[#6B7280] font-mono truncate">{adminUser?.email || "admin@vinfast.vn"}</div>
+                        <div className="text-[10px] text-[#6B7280] font-mono truncate">{adminUser?.email || "admin@evo2o.vn"}</div>
                         <span className="inline-block mt-1 px-2 py-0.5 rounded bg-red-50 text-[#E60012] text-[9px] font-bold uppercase border border-red-200">
                           {adminUser?.roles?.[0] || "Administrator"}
                         </span>

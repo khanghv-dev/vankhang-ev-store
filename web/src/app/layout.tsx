@@ -19,21 +19,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "VinFast O2O — Hệ thống Đặt cọc & Quản lý Xe",
-    template: "%s | VinFast O2O",
+    default: "EV O2O — Hệ sinh thái Đặt cọc & Quản lý Xe Điện",
+    template: "%s | EV O2O",
   },
   description:
-    "Nền tảng O2O (Online-to-Offline) dành riêng cho hệ sinh thái VinFast — đặt cọc trực tuyến, kích hoạt bảo hành điện tử và theo dõi đơn hàng thời gian thực.",
-  keywords: ["VinFast", "O2O", "đặt cọc xe", "bảo hành điện tử", "quản lý đơn hàng"],
-  authors: [{ name: "VinFast O2O Team" }],
-  creator: "VinFast",
+    "Nền tảng O2O (Online-to-Offline) dành cho hệ sinh thái xe điện (EV) — đặt cọc trực tuyến, kích hoạt bảo hành điện tử và theo dõi đơn hàng thời gian thực.",
+  keywords: ["EV", "O2O", "xe điện", "đặt cọc xe điện", "bảo hành điện tử", "quản lý đơn hàng"],
+  authors: [{ name: "EV O2O Team" }],
+  creator: "EV O2O Ecosystem",
   openGraph: {
     type: "website",
     locale: "vi_VN",
-    siteName: "VinFast O2O",
-    title: "VinFast O2O — Hệ thống Đặt cọc & Quản lý Xe",
+    siteName: "EV O2O",
+    title: "EV O2O — Hệ thống Đặt cọc & Quản lý Xe Điện",
     description:
-      "Nền tảng O2O dành riêng cho hệ sinh thái VinFast — đặt cọc trực tuyến, theo dõi đơn hàng thời gian thực.",
+      "Nền tảng O2O dành cho hệ sinh thái xe điện — đặt cọc trực tuyến, theo dõi đơn hàng thời gian thực.",
   },
 };
 
