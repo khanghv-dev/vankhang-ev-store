@@ -1,6 +1,6 @@
-# VinFast O2O (Online-to-Offline) Ecosystem
+# EV O2O (Online-to-Offline) Ecosystem
 
-VinFast O2O là hệ thống Online-to-Offline toàn diện dành cho việc quản lý dịch vụ, kho phụ tùng/pin xe điện và hỗ trợ đặt lịch, thuê/thay pin cho hệ sinh thái xe điện VinFast. Hệ thống kết nối liền mạch giữa nền tảng trực tuyến (Web Admin/Customer Portal, Mobile App) và hạ tầng vận hành trực tiếp (Showroom, Trạm dịch vụ, Kho hàng).
+EV O2O là hệ thống Online-to-Offline toàn diện dành cho việc quản lý dịch vụ, kho phụ tùng/pin xe điện và hỗ trợ đặt lịch, thuê/thay pin cho hệ sinh thái xe điện (Electric Vehicles). Hệ thống kết nối liền mạch giữa nền tảng trực tuyến (Web Admin/Customer Portal, Mobile App) và hạ tầng vận hành trực tiếp (Showroom, Trạm dịch vụ, Kho hàng).
 
 ---
 
@@ -15,7 +15,7 @@ Dự án được thiết kế theo mô hình Microservices áp dụng chuẩn C
 ### 1. Backend Services (.NET 8 Web API)
 - Kiến trúc: Clean Architecture (Domain, Application, Infrastructure, API).
 - Quản lý Đơn hàng (OrderService): Đặt lịch dịch vụ, đặt cọc xe/pin, thanh toán (VNPay), phân quyền RBAC, CMS tin tức/FAQ, Outbox Pattern.
-- Quản lý Kho (InventoryService): Tồn kho phụ tùng (Pin VF8, lốp, động cơ...), POS Showroom, theo dõi log trạm pin.
+- Quản lý Kho (InventoryService): Tồn kho phụ tùng (Pin EV, lốp, động cơ...), POS Showroom, theo dõi log trạm pin.
 - Thư viện chính: Entity Framework Core 8, MediatR, FluentValidation, MassTransit/Kafka, StackExchange.Redis.
 
 ### 2. Frontend Web Application (Next.js & React)
@@ -43,7 +43,7 @@ Dự án được thiết kế theo mô hình Microservices áp dụng chuẩn C
 ## Cấu trúc Thư mục Dự án
 
 ```text
-VinFastO2O/
+ev-o2o-ecosystem/
 ├── src/                                     # Backend Microservices (.NET 8)
 │   ├── VinFastO2O.OrderService.API/         # API Endpoint Order Service
 │   ├── VinFastO2O.OrderService.Application/ # Business Logic & Use Cases
