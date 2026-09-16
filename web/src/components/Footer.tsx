@@ -140,14 +140,14 @@ export default function Footer() {
             <Link
               href="/"
               className="inline-flex items-center gap-2.5 group"
-              aria-label="EV O2O — Trang chủ"
+              aria-label="VinFast O2O — Trang chủ"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-primary)] shadow-[var(--shadow-brand)] transition-transform duration-200 group-hover:scale-105">
-                <span className="text-sm font-black text-white leading-none">EV</span>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E30613] shadow-[var(--shadow-brand)] transition-transform duration-200 group-hover:scale-105">
+                <span className="text-base font-black text-white leading-none">V</span>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="text-sm font-black text-[#111827] tracking-wide">EV O2O</span>
-                <span className="text-xs text-[var(--color-primary)] font-semibold tracking-widest uppercase">Ecosystem</span>
+                <span className="text-base font-black text-[#111827] tracking-tight">VinFast</span>
+                <span className="text-[9.5px] text-[#E30613] font-bold tracking-[0.18em] uppercase mt-0.5">O2O PLATFORM</span>
               </div>
             </Link>
 
@@ -162,16 +162,16 @@ export default function Footer() {
                 Hỗ trợ khách hàng
               </p>
               <a
-                href="tel:18001260"
+                href="tel:0123456789"
                 className="inline-flex items-center gap-1.5 text-base font-bold text-[#111827] hover:text-[#E60012] transition-colors"
-                aria-label="Gọi hotline 1800 1260"
+                aria-label="Gọi hotline 0123 456 789"
               >
                 <svg className="h-4 w-4 text-[#E60012]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 6.75Z" />
                 </svg>
-                1800 1260
+                0123 456 789
               </a>
-              <p className="text-xs text-[#6B7280]">Miễn phí · 8:00 – 22:00 hàng ngày</p>
+              <p className="text-xs text-[#6B7280]">Hỗ trợ 24/7 (Đồ án KLTN)</p>
             </div>
 
             {/* Social links */}

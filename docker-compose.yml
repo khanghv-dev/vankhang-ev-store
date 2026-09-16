@@ -1,4 +1,4 @@
-﻿version: '3.8'
+version: '3.8'
 
 services:
   # ─── Relational Database (PostgreSQL) ───
@@ -111,14 +111,14 @@ services:
   inventory-service:
     build:
       context: ./src
-      dockerfile: EvO2O.InventoryService.API/Dockerfile
-    container_name: evo2o-inventory-service
+      dockerfile: VinFastO2O.InventoryService.API/Dockerfile
+    container_name: vinfast-inventory-service
     restart: always
     ports:
       - "5186:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=EvO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
       - ConnectionStrings__MongoConnection=mongodb://mongodb:27017
       - ConnectionStrings__RedisConnection=redis:6379
       - Kafka__Host=kafka:29092
@@ -141,15 +141,15 @@ services:
   order-service:
     build:
       context: ./src
-      dockerfile: EvO2O.OrderService.API/Dockerfile
-    container_name: evo2o-order-service
+      dockerfile: VinFastO2O.OrderService.API/Dockerfile
+    container_name: vinfast-order-service
     restart: always
     ports:
       - "5022:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=EvO2O_OrderDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
-      - ConnectionStrings__InventoryConnection=Host=postgres;Port=5432;Database=EvO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=VinFastO2O_OrderDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
+      - ConnectionStrings__InventoryConnection=Host=postgres;Port=5432;Database=VinFastO2O_InventoryDb_Dev;Username=${POSTGRES_USER:-hvk2k5};Password=${POSTGRES_PASSWORD:-odoopwd}
       - ConnectionStrings__RedisConnection=redis:6379
       - Kafka__Host=kafka:29092
       - EmailSettings__Password=${RESEND_API_KEY}

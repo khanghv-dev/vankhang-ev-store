@@ -134,14 +134,14 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           {/* Sidebar Top Logo */}
           <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between">
             <Link href="/admin" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#E11D2E] to-[#C8102E] flex items-center justify-center font-black text-white text-base shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform">
-                EV
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#E11D2E] to-[#C8102E] flex items-center justify-center font-black text-white text-base shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform">
+                V
               </div>
               <div>
                 <div className="font-extrabold text-base tracking-tight text-[#111827] flex items-center gap-1.5">
-                  EV O2O <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-[#E11D2E] text-[10px] font-mono border border-red-200">Admin</span>
+                  VinFast <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-[#E11D2E] text-[10px] font-mono border border-red-200">Admin</span>
                 </div>
-                <div className="text-[10px] text-[#6B7280] font-mono">Platform Management Portal</div>
+                <div className="text-[10px] text-[#6B7280] font-mono">O2O Management Portal</div>
               </div>
             </Link>
 

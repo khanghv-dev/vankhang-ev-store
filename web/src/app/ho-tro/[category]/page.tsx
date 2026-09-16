@@ -82,7 +82,7 @@ const ARTICLE_DB: Record<string, ArticleData> = {
       "Hệ thống VinFast O2O bảo lưu quyền từ chối hoặc hủy bỏ đơn đặt cọc nếu phát hiện có hành vi gian lận, đầu cơ hoặc vi phạm quy định pháp luật.",
       "Mọi thay đổi về điều khoản sẽ được cập nhật công khai trên cổng thông tin chính thức và có hiệu lực ngay khi đăng tải."
     ],
-    note: "Nếu Quý khách không đồng ý với bất kỳ điều khoản nào trong văn bản này, vui lòng ngưng sử dụng dịch vụ hoặc liên hệ Tổng đài CSKH 1800 1260 để được tư vấn thêm."
+    note: "Nếu Quý khách không đồng ý với bất kỳ điều khoản nào trong văn bản này, vui lòng ngưng sử dụng dịch vụ hoặc liên hệ Tổng đài CSKH 0123 456 789 để được tư vấn thêm."
   },
   "chinh-sach-bao-mat": {
     title: "Chính sách bảo mật & Bảo vệ dữ liệu cá nhân",
@@ -96,7 +96,7 @@ const ARTICLE_DB: Record<string, ArticleData> = {
       "Chia sẻ dữ liệu: VinFast không bán hoặc chia sẻ thông tin cho bên thứ ba ngoại trừ các đại lý ủy quyền bàn giao xe và đối tác thanh toán liên kết.",
       "Quyền của khách hàng: Quý khách có quyền yêu cầu tra cứu, chỉnh sửa hoặc yêu cầu xóa bỏ dữ liệu cá nhân bất kỳ lúc nào."
     ],
-    note: "Mọi thắc mắc liên quan đến xử lý dữ liệu cá nhân, Quý khách vui lòng gửi email về support@evo2o.vn hoặc gọi Hotline 1800 1260."
+    note: "Mọi thắc mắc liên quan đến xử lý dữ liệu cá nhân, Quý khách vui lòng gửi email về support@vinfast.vn hoặc gọi Hotline 0123 456 789."
   },
   "quy-dinh-dat-mua": {
     title: "Quy định & Thỏa thuận đặt cọc giữ chỗ mua xe",
@@ -132,7 +132,7 @@ const ARTICLE_DB: Record<string, ArticleData> = {
     lastUpdated: "Cập nhật hôm nay",
     intro: "VinFast tôn trọng và nghiêm túc thực hiện các quy định bảo vệ quyền lợi người tiêu dùng. Mọi tranh chấp phát sinh sẽ được ưu tiên giải quyết thông qua thương lượng hòa giải.",
     steps: [
-      "Bước 1 - Tiếp nhận khiếu nại: Khách hàng gửi yêu cầu qua Hotline 1800 1260 hoặc Trực tiếp tại Hệ thống Showroom toàn quốc.",
+      "Bước 1 - Tiếp nhận khiếu nại: Khách hàng gửi yêu cầu qua Hotline 0123 456 789 hoặc Trực tiếp tại Hệ thống Showroom toàn quốc.",
       "Bước 2 - Xác minh thông tin: Bộ phận Chăm sóc khách hàng tiến hành kiểm tra nhật ký giao dịch và làm việc với Showroom liên quan trong 24h.",
       "Bước 3 - Thương lượng giải quyết: VinFast đưa ra phương án xử lý (hoàn tiền, đổi xe hoặc bồi thường) dựa trên quy định hợp đồng.",
       "Bước 4 - Phản hồi kết quả: Khách hàng nhận văn bản phản hồi chính thức trong vòng 3 - 5 ngày làm việc.",
